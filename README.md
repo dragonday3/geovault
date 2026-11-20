@@ -104,7 +104,7 @@ db/init/        one-time database bootstrap (least-privilege app role)
 db/migrations/  numbered SQL migrations, applied automatically at API start-up
 data/           regional sample data + GeoJSON loader
 frontend/       static map UI (vanilla JS + vendored Leaflet)
-docs/           plans and (later) security documentation
+.github/        Dependabot configuration (CI workflows arrive in milestone 3)
 ```
 
 ## Scope and ethics
