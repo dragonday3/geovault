@@ -15,6 +15,8 @@ from app.database import create_pool
 from app.routers import admin, auth, favourites, places, sharing, users
 from app.schemas.places import Health
 from app.security.rate_limit import LoginLimiter, RateLimiter
+from app.security.upload_guard import UploadGuard
+from app.services.photos import LocalPhotoStore, PhotoLimits
 
 log = logging.getLogger("geovault")
 
@@ -57,6 +59,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.login_limiter = LoginLimiter()
     app.state.register_limiter = RateLimiter(limit=10, window_seconds=3600)
     app.state.share_limiter = RateLimiter(limit=30, window_seconds=3600)
+    app.state.photo_limits = PhotoLimits()
+    app.state.photo_store = LocalPhotoStore(settings.photo_dir)
+    app.add_middleware(UploadGuard, max_bytes_getter=lambda: app.state.photo_limits.max_bytes)
 
     @app.exception_handler(RequestValidationError)
     async def validation_error(request: Request, exc: RequestValidationError):

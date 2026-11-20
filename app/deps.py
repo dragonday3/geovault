@@ -16,6 +16,7 @@ from app.config import Settings
 from app.database import Conn
 from app.security.rate_limit import LoginLimiter, RateLimiter
 from app.security.tokens import InvalidToken, decode_access_token
+from app.services.photos import LocalPhotoStore, PhotoLimits
 
 _bearer = HTTPBearer(auto_error=False)
 _UNAUTHORIZED = HTTPException(
@@ -110,3 +111,31 @@ OwnedFav = Annotated[OwnedFavourite, Depends(get_owned_favourite)]
 
 def get_share_limiter(request: Request) -> RateLimiter:
     return request.app.state.share_limiter
+
+
+def get_photo_limits(request: Request):
+    return request.app.state.photo_limits
+
+
+def get_photo_store(request: Request):
+    return request.app.state.photo_store
+
+
+PhotoStoreDep = Annotated[LocalPhotoStore, Depends(get_photo_store)]
+PhotoLimitsDep = Annotated[PhotoLimits, Depends(get_photo_limits)]
+
+
+def photo_response(store, photo: dict) -> Response:
+    """Serve a stored photo safely. The content type comes from our own DB row (set from the
+    decoded format), never from the client; the extra headers make the browser treat the
+    bytes strictly as an image even if something went wrong upstream."""
+    return Response(
+        content=store.get(photo["storage_key"]),
+        media_type=photo["content_type"],
+        headers={
+            "X-Content-Type-Options": "nosniff",
+            "Content-Security-Policy": "default-src 'none'; sandbox",
+            "Content-Disposition": 'inline; filename="photo"',
+            "Cache-Control": "private, no-store",
+        },
+    )

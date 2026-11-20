@@ -15,7 +15,7 @@ import pytest
 from tests.helpers import PASSWORD, make_user
 
 EXACT = {"lat": -37.81361, "lon": 144.96312}
-SHARED_KEYS = {"label", "region", "location", "owner_display_name", "shared_at", "expires_at"}
+SHARED_KEYS = {"label", "region", "location", "owner_display_name", "shared_at", "expires_at", "has_photo"}
 
 
 def metres(a, b) -> float:

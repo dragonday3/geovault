@@ -5,11 +5,14 @@ import uuid
 
 from psycopg import Connection, sql
 
+from app.services import photos
+
 MAX_FAVOURITES_PER_USER = 1000  # resource-consumption cap (OWASP API4)
 
 OWNER_COLUMNS = """
     id, label, note, region, ST_Y(geom) AS lat, ST_X(geom) AS lon, place_id,
-    visibility, share_precision_m, created_at, updated_at
+    visibility, share_precision_m, created_at, updated_at,
+    EXISTS (SELECT 1 FROM photos p WHERE p.favourite_id = favourites.id) AS has_photo
 """
 
 
@@ -123,8 +126,10 @@ def update(conn: Connection, favourite_id: uuid.UUID, owner_id: uuid.UUID, data)
     return conn.execute(query, params | {"id": favourite_id, "owner": owner_id}).fetchone()
 
 
-def delete(conn: Connection, favourite_id: uuid.UUID, owner_id: uuid.UUID) -> None:
+def delete(conn: Connection, store, favourite_id: uuid.UUID, owner_id: uuid.UUID) -> None:
+    keys = photos.keys_for_favourite(conn, favourite_id)
     conn.execute("DELETE FROM favourites WHERE id = %s AND owner_id = %s", (favourite_id, owner_id))
+    photos.delete_files(store, keys)  # the DB cascade removes rows; files must go too
 
 
 def list_public(conn: Connection, region: str | None, limit: int, offset: int) -> list[dict]:

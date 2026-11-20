@@ -7,7 +7,7 @@ and **Bengaluru, India**, developed as a security portfolio project: build it, t
 attack a deliberately vulnerable **local lab** instance, remediate, and prove the fixes with
 regression tests.
 
-> **Status: Milestone 7 — favourites and sharing.** Public places API + map over ~2,900 real places.
+> **Status: Milestone 8 — photos.** Public places API + map over ~2,900 real places.
 > Authentication, favourites,
 > sharing, lab mode, GeoServer and CI arrive in later milestones (see `CHANGELOG.md`).
 > Only features listed under *What works now* are implemented.
@@ -39,6 +39,8 @@ regression tests.
 | `GET /api/favourites/{id}/shares`, `DELETE .../shares/{share_id}` | List / revoke shares |
 | `GET /api/shared/{token}` | Anonymous link view: cloaked location (100 m / 500 m / 1 km grid), no note, email or place |
 | `GET /api/shared/with-me` | Favourites shared with you (cloaked) |
+| `POST/GET/DELETE /api/favourites/{id}/photo` | Owner: upload (JPEG/PNG/WebP ≤ 5 MB, multipart field `file`), view, remove. Uploads are rebuilt from pixels with all EXIF/GPS removed |
+| `GET /api/shared/{token}/photo`, `GET /api/shared/with-me/{share_id}/photo` | Photo for a valid share link / your received share |
 | `GET /api/admin/users` | Admin: search/list accounts |
 | `PATCH /api/admin/users/{id}/role` | Admin: grant/revoke admin (not your own role); audited |
 | `GET /api/admin/audit` | Admin: audit trail with filters (viewing it is itself audited) |
@@ -93,7 +95,7 @@ docker compose exec api python -m app.manage promote-admin you@example.com
 ## Testing
 
 ```powershell
-docker compose -f compose.test.yml run --rm --build test   # 190 tests, ~35 s after the image is built
+docker compose -f compose.test.yml run --rm --build test   # 228 tests, ~40 s after the image is built
 docker compose -f compose.test.yml down -v                 # remove the throwaway test database
 ```
 
@@ -117,6 +119,7 @@ database host other than the dedicated test instance.
 | Accounts | display-name-only edits (role/email/id smuggling → 422), export contains only your data and no secrets, deletion needs the password, erases content, anonymises identity, keeps audit evidence, frees the email; last admin cannot delete themselves |
 | Favourites / BOLA (API1) | another user gets 404, identical to a missing id, on read, edit, delete, share, list-shares and revoke, and the data is unchanged; region server-derived; owner_id/region smuggling → 422; per-user cap |
 | Sharing / data exposure (API3) | shared and public views contain exactly the minimal fields; cloaked within half a cell diagonal at 100/500/1000 m; deterministic (no averaging); linked place never revealed; tokens shown once and stored hashed; revoked, expired, now-private and deleted-owner links → 404; share validation, self/duplicate shares, rate limit |
+| Photos | GPS/camera/XMP/PNG-text metadata gone from the downloaded file (fixtures proven to contain it first); orientation preserved; SVG/HTML/GIF/truncated files and decompression bombs → 422; > 5 MB → 413 and no length → 411, before the body is parsed; filename and content type ignored; safe delivery headers; owner, link and recipient access scoped; replace/delete/account deletion remove files |
 | Admin (API5) | anonymous → 401 and ordinary user → 403 on every admin route; router-level guard asserted; role change is immediate and audited; no self role change; audit view filtered and self-audited |
 | Docs | `/docs` and `/openapi.json` return 404 in production |
 
@@ -156,6 +159,10 @@ Gitleaks, private-key detection and file hygiene before every local commit:
 - **Location privacy:** exact coordinates only ever reach the owner. Every other view is snapped
   in SQL to a 100 m / 500 m / 1 km grid in the city's metric projection, with no note, email or
   linked place. See **[docs/privacy/location-precision.md](docs/privacy/location-precision.md)**.
+- **Photos:** decoded and rebuilt from raw pixels, so EXIF/GPS, XMP, ICC and text chunks are
+  dropped as a class. Format comes from content, not the client. Decompression-bomb and size
+  limits apply before decoding/parsing. Files get random keys in a dedicated volume and are
+  served with `nosniff` + sandbox CSP. See **[docs/privacy/photo-handling.md](docs/privacy/photo-handling.md)**.
 - **Data rights:** JSON export of all personal data. Account deletion erases content,
   anonymises the account row and retains de-identified audit evidence.
 - **Audit log:** registration, login success/failure, rate limiting, refresh, reuse detection,
@@ -191,7 +198,7 @@ app/            FastAPI application (config, database pool, migrations runner, r
 db/init/        one-time database bootstrap (least-privilege app role)
 db/migrations/  numbered SQL migrations, applied automatically at API start-up
 data/           dataset catalogue (sources.py), fetcher, importer, raw snapshots, test seeds
-docs/           data sources, authentication design, privacy/location precision
+docs/           data sources, authentication design, privacy (location precision, photos)
 frontend/       static map UI (vanilla JS + vendored Leaflet)
 tests/          unit + integration tests (real PostGIS)
 compose.test.yml  isolated test stack (separate compose project)

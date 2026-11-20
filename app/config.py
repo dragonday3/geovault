@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     env: Literal["local", "production"] = "local"
     migrations_dir: Path = Path(__file__).resolve().parent.parent / "db" / "migrations"
     frontend_dir: Path = Path(__file__).resolve().parent.parent / "frontend"
+    # Uploaded photos (server-generated file names only). A named volume in docker-compose.
+    photo_dir: Path = Path("/data/photos")
 
     # HS256 signing key. 32+ chars of high-entropy random data (e.g. secrets.token_urlsafe(48)).
     jwt_secret: SecretStr

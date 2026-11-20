@@ -45,6 +45,10 @@ COPY --chown=root:root app/ /srv/app/
 COPY --chown=root:root db/migrations/ /srv/db/migrations/
 COPY --chown=root:root frontend/ /srv/frontend/
 
+# The only writable application path. A new named volume mounted here inherits this
+# ownership, so the unprivileged user can store photos while the rest of the FS is read-only.
+RUN mkdir -p /data/photos && chown 10001:10001 /data/photos && chmod 700 /data/photos
+
 USER 10001:10001
 EXPOSE 8000
 

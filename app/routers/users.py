@@ -77,7 +77,7 @@ def delete_me(
     # Audit first, while the actor still exists; the row survives anonymisation.
     audit(conn, request, "user.delete", actor_id=user.id, target_type="user", target_id=user.id)
     try:
-        svc.delete_account(conn, user.id)
+        svc.delete_account(conn, user.id, request.app.state.photo_store)
     except svc.LastAdminError as exc:
         conn.rollback()
         return JSONResponse({"detail": str(exc)}, status.HTTP_409_CONFLICT)

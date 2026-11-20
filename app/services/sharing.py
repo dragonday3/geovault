@@ -53,7 +53,9 @@ class TooManyShares(ShareError):
 _SHARED_SELECT = """
     SELECT s.id AS share_id, f.label, f.region, f.share_precision_m AS precision_m,
            ST_Y(c.p) AS lat, ST_X(c.p) AS lon,
-           o.display_name AS owner_display_name, s.created_at AS shared_at, s.expires_at
+           o.display_name AS owner_display_name, s.created_at AS shared_at, s.expires_at,
+           EXISTS (SELECT 1 FROM photos ph WHERE ph.favourite_id = f.id) AS has_photo,
+           f.id AS favourite_id
     FROM shares s
     JOIN favourites f ON f.id = s.favourite_id
     JOIN users o ON o.id = f.owner_id AND o.deleted_at IS NULL

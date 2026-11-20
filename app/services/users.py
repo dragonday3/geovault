@@ -15,6 +15,8 @@ from datetime import UTC, datetime
 
 from psycopg import Connection
 
+from app.services import photos
+
 ANONYMISED_NAME = "Deleted user"
 DELETED_HASH = "!deleted"  # allowed by the users.password_hash CHECK; can never verify
 
@@ -40,11 +42,12 @@ def _other_active_admins(conn: Connection, user_id: uuid.UUID) -> int:
     ).fetchone()["n"]
 
 
-def delete_account(conn: Connection, user_id: uuid.UUID) -> None:
+def delete_account(conn: Connection, user_id: uuid.UUID, store) -> None:
     role = conn.execute("SELECT role FROM users WHERE id = %s FOR UPDATE", (user_id,)).fetchone()["role"]
     if role == "admin" and _other_active_admins(conn, user_id) == 0:
         raise LastAdminError("The last administrator cannot delete their account.")
 
+    photo_keys = photos.keys_for_owner(conn, user_id)
     conn.execute("DELETE FROM favourites WHERE owner_id = %s", (user_id,))  # cascades shares, photos
     conn.execute("DELETE FROM shares WHERE shared_with_user_id = %s", (user_id,))
     conn.execute("DELETE FROM refresh_tokens WHERE user_id = %s", (user_id,))
@@ -61,6 +64,7 @@ def delete_account(conn: Connection, user_id: uuid.UUID) -> None:
         """,
         (ANONYMISED_NAME, DELETED_HASH, user_id),
     )
+    photos.delete_files(store, photo_keys)  # rows cascaded above; remove the files too
 
 
 def export_data(conn: Connection, user_id: uuid.UUID) -> dict:

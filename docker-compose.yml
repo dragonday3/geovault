@@ -36,7 +36,10 @@ services:
     ports:
       - "127.0.0.1:${GEOVAULT_API_PORT:-8000}:8000"
     read_only: true
-    tmpfs: [/tmp]
+    # Size-capped: multipart uploads are buffered here before the 5 MB check runs.
+    tmpfs: ["/tmp:size=64m"]
+    volumes:
+      - photos:/data/photos
     cap_drop: [ALL]
     security_opt: ["no-new-privileges:true"]
     networks: [backend]
@@ -46,3 +49,4 @@ networks:
 
 volumes:
   pgdata:
+  photos:

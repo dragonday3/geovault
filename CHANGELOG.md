@@ -4,6 +4,20 @@ All notable changes to GeoVault. Format: [Keep a Changelog](https://keepachangel
 
 ## [Unreleased]
 
+### Added — Milestone 8: photos (2026-11-20)
+- `POST/GET/DELETE /api/favourites/{id}/photo` (owner) and photo routes for valid share links
+  and received shares; `has_photo` on owner and shared views.
+- Sanitising pipeline (Pillow 13): content-based format detection (JPEG/PNG/WebP only), pixel
+  limit before decode, orientation applied, pixels rebuilt into a fresh image so all metadata
+  (EXIF incl. GPS, XMP, ICC, PNG text) is dropped, then re-encoded.
+- `UploadGuard` ASGI middleware: 411 without Content-Length, 413 above 5 MB, before multipart
+  parsing; received bytes counted.
+- Random UUID storage keys with path-containment checks and atomic writes; files removed on
+  replace, photo delete, favourite delete and account deletion. Photos volume owned by the
+  unprivileged user; `/tmp` tmpfs size-capped.
+- Migration `0008`: one photo per favourite. Safe delivery headers (nosniff, sandbox CSP, no-store).
+- `docs/privacy/photo-handling.md`; 38 new tests (228 total).
+
 ### Added — Milestone 7: favourites and sharing (2026-11-20)
 - Favourites CRUD (`/api/favourites`). Server-derived region; create from coordinates or a public
   place; exact location and private note returned only to the owner; per-user cap.

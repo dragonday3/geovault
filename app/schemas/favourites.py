@@ -108,6 +108,7 @@ class FavouriteOut(BaseModel):
     share_precision_m: Precision
     created_at: datetime
     updated_at: datetime
+    has_photo: bool
 
 
 class CloakedLocation(BaseModel):
@@ -125,6 +126,7 @@ class SharedFavouriteOut(BaseModel):
     owner_display_name: str
     shared_at: datetime
     expires_at: datetime | None
+    has_photo: bool
 
 
 class ReceivedShareOut(SharedFavouriteOut):

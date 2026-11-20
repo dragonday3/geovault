@@ -8,10 +8,18 @@ runs. Static routes (/public) are declared before /{favourite_id} so they are no
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Body, Depends, File, HTTPException, Query, Request, UploadFile, status
 
 from app.database import Conn
-from app.deps import AuthUser, OwnedFav, get_share_limiter, no_store
+from app.deps import (
+    AuthUser,
+    OwnedFav,
+    PhotoLimitsDep,
+    PhotoStoreDep,
+    get_share_limiter,
+    no_store,
+    photo_response,
+)
 from app.schemas.favourites import (
     FavouriteCreateIn,
     FavouriteOut,
@@ -24,7 +32,7 @@ from app.schemas.favourites import (
 from app.security.audit import audit
 from app.security.rate_limit import RateLimiter
 from app.services import favourites as favs
-from app.services import sharing
+from app.services import photos, sharing
 
 router = APIRouter(prefix="/api/favourites", tags=["favourites"], dependencies=[Depends(no_store)])
 
@@ -77,7 +85,7 @@ def update_favourite(body: FavouriteUpdateIn, fav: OwnedFav, user: AuthUser, con
 
 @router.delete("/{favourite_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_favourite(fav: OwnedFav, user: AuthUser, conn: Conn, request: Request):
-    favs.delete(conn, fav.id, fav.owner_id)
+    favs.delete(conn, request.app.state.photo_store, fav.id, fav.owner_id)
     audit(conn, request, "favourite.delete", actor_id=user.id, target_type="favourite", target_id=fav.id)
 
 
@@ -131,3 +139,67 @@ def revoke_share(share_id: uuid.UUID, fav: OwnedFav, user: AuthUser, conn: Conn,
     if not sharing.revoke(conn, fav.id, share_id):
         raise HTTPException(404, "Share not found")
     audit(conn, request, "share.revoke", actor_id=user.id, target_type="share", target_id=share_id)
+
+
+# --- photos ------------------------------------------------------------------------------------
+
+
+@router.post(
+    "/{favourite_id}/photo",
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        411: {},
+        413: {"description": "Larger than 5 MB"},
+        422: {"description": "Not a JPEG/PNG/WebP image"},
+    },
+)
+def upload_photo(
+    fav: OwnedFav,
+    user: AuthUser,
+    conn: Conn,
+    request: Request,
+    file: Annotated[UploadFile, File(description="JPEG, PNG or WebP, max 5 MB")],
+    limits: PhotoLimitsDep,
+    store: PhotoStoreDep,
+):
+    data = file.file.read(limits.max_bytes + 1)  # never read more than the cap
+    try:
+        image = photos.sanitise(data, limits)
+    except photos.ImageTooLarge:
+        raise HTTPException(413, "Photo is larger than the 5 MB limit.") from None
+    except photos.InvalidImage:
+        audit(
+            conn,
+            request,
+            "photo.upload_rejected",
+            actor_id=user.id,
+            target_type="favourite",
+            target_id=fav.id,
+        )
+        conn.commit()
+        raise HTTPException(422, "File is not a valid JPEG, PNG or WebP image.") from None
+    row = photos.attach(conn, store, fav.id, image)
+    audit(conn, request, "photo.upload", actor_id=user.id, target_type="favourite", target_id=fav.id)
+    return {
+        "content_type": row["content_type"],
+        "size_bytes": row["size_bytes"],
+        "created_at": row["created_at"],
+    }
+
+
+@router.get("/{favourite_id}/photo", responses={200: {"content": {"image/*": {}}}, 404: {}})
+def get_photo(fav: OwnedFav, conn: Conn, store: PhotoStoreDep):
+    photo = photos.for_favourite(conn, fav.id)
+    if photo is None:
+        raise HTTPException(404, "No photo")
+    return photo_response(store, photo)
+
+
+@router.delete("/{favourite_id}/photo", status_code=status.HTTP_204_NO_CONTENT)
+def delete_photo(fav: OwnedFav, user: AuthUser, conn: Conn, request: Request, store: PhotoStoreDep):
+    keys = photos.keys_for_favourite(conn, fav.id)
+    if not keys:
+        raise HTTPException(404, "No photo")
+    conn.execute("DELETE FROM photos WHERE favourite_id = %s", (fav.id,))
+    photos.delete_files(store, keys)
+    audit(conn, request, "photo.delete", actor_id=user.id, target_type="favourite", target_id=fav.id)

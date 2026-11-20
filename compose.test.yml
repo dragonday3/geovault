@@ -35,11 +35,12 @@ services:
     environment:
       GEOVAULT_DATABASE_URL: postgresql://geovault_app:${GEOVAULT_DB_PASSWORD}@db-test:5432/geovault
       GEOVAULT_JWT_SECRET: ${GEOVAULT_JWT_SECRET:?set GEOVAULT_JWT_SECRET in .env}
+      GEOVAULT_PHOTO_DIR: /tmp/photos
     depends_on:
       db-test:
         condition: service_healthy
     read_only: true
-    tmpfs: [/tmp]
+    tmpfs: ["/tmp:size=256m"]
     cap_drop: [ALL]
     security_opt: ["no-new-privileges:true"]
     networks: [test]
