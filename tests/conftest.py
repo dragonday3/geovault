@@ -75,4 +75,5 @@ def _reset_rate_limiters(client):
     client.app.state.login_limiter.account.reset()
     client.app.state.login_limiter.ip.reset()
     client.app.state.register_limiter.reset()
+    client.app.state.share_limiter.reset()
     client.cookies.clear()

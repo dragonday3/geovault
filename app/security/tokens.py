@@ -61,7 +61,12 @@ def new_refresh_token() -> tuple[str, bytes]:
     return raw, hash_refresh_token(raw)
 
 
-def hash_refresh_token(raw: str) -> bytes:
-    # A plain SHA-256 is sufficient: the token is 256 bits of randomness, so there is
-    # nothing to brute-force (unlike passwords, which need a slow hash).
+def sha256_token(raw: str) -> bytes:
+    """Digest for storing high-entropy bearer secrets (refresh tokens, share-link tokens).
+
+    A plain SHA-256 is sufficient: the token is 256 bits of randomness, so there is nothing
+    to brute-force (unlike passwords, which need a slow hash)."""
     return hashlib.sha256(raw.encode()).digest()
+
+
+hash_refresh_token = sha256_token

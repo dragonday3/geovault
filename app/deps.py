@@ -82,3 +82,31 @@ AdminUser = Annotated[CurrentUser, Depends(require_admin)]
 def no_store(response: Response) -> None:
     """Personal and administrative responses must never be cached by browsers or proxies."""
     response.headers["Cache-Control"] = "no-store"
+
+
+class OwnedFavourite(BaseModel):
+    id: uuid.UUID
+    owner_id: uuid.UUID
+
+
+def get_owned_favourite(favourite_id: uuid.UUID, user: AuthUser, conn: Conn) -> OwnedFavourite:
+    """Object-level authorization (OWASP API1). The ONLY way favourite routes obtain a
+    favourite id: it must exist AND belong to the caller. Someone else's favourite gets the
+    same 404 as a missing one, so ids cannot be probed for existence.
+
+    UUIDs make ids unguessable, but they are not authorization: this check is.
+    """
+    row = conn.execute(
+        "SELECT id, owner_id FROM favourites WHERE id = %s AND owner_id = %s",
+        (favourite_id, user.id),
+    ).fetchone()
+    if row is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Favourite not found")
+    return OwnedFavourite(**row)
+
+
+OwnedFav = Annotated[OwnedFavourite, Depends(get_owned_favourite)]
+
+
+def get_share_limiter(request: Request) -> RateLimiter:
+    return request.app.state.share_limiter

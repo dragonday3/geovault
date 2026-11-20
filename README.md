@@ -7,7 +7,7 @@ and **Bengaluru, India**, developed as a security portfolio project: build it, t
 attack a deliberately vulnerable **local lab** instance, remediate, and prove the fixes with
 regression tests.
 
-> **Status: Milestone 6 — accounts and administration.** Public places API + map over ~2,900 real places.
+> **Status: Milestone 7 — favourites and sharing.** Public places API + map over ~2,900 real places.
 > Authentication, favourites,
 > sharing, lab mode, GeoServer and CI arrive in later milestones (see `CHANGELOG.md`).
 > Only features listed under *What works now* are implemented.
@@ -32,6 +32,13 @@ regression tests.
 | `PATCH /api/users/me` | Change display name. Any other field (e.g. `role`) is rejected with 422 |
 | `GET /api/users/me/export` | Download everything GeoVault holds about you as JSON |
 | `DELETE /api/users/me` | Delete your account (password re-entry required): content erased, identity anonymised |
+| `GET/POST /api/favourites` | List your favourites / save one (by `location` or public `place_id`; region derived server-side) |
+| `GET/PATCH/DELETE /api/favourites/{id}` | Owner only: exact location and private note. Anyone else gets 404 |
+| `GET /api/favourites/public` | Favourites marked public: cloaked location and display name only |
+| `POST /api/favourites/{id}/share` | Share with a registered user (`{"type":"user","email":...}`) or create an expiring link (`{"type":"link","expires_in_hours":72}`) |
+| `GET /api/favourites/{id}/shares`, `DELETE .../shares/{share_id}` | List / revoke shares |
+| `GET /api/shared/{token}` | Anonymous link view: cloaked location (100 m / 500 m / 1 km grid), no note, email or place |
+| `GET /api/shared/with-me` | Favourites shared with you (cloaked) |
 | `GET /api/admin/users` | Admin: search/list accounts |
 | `PATCH /api/admin/users/{id}/role` | Admin: grant/revoke admin (not your own role); audited |
 | `GET /api/admin/audit` | Admin: audit trail with filters (viewing it is itself audited) |
@@ -86,7 +93,7 @@ docker compose exec api python -m app.manage promote-admin you@example.com
 ## Testing
 
 ```powershell
-docker compose -f compose.test.yml run --rm --build test   # 131 tests, ~20 s after the image is built
+docker compose -f compose.test.yml run --rm --build test   # 190 tests, ~35 s after the image is built
 docker compose -f compose.test.yml down -v                 # remove the throwaway test database
 ```
 
@@ -108,6 +115,8 @@ database host other than the dedicated test instance.
 | Authentication | password policy, generic failures, Argon2 timing parity, rate limits, hardened cookies, `alg=none`/forged/expired/wrong-audience JWTs rejected, role claim ignored, refresh rotation + reuse detection, logout revocation, hashed token storage, secret-free audit |
 | Schema constraints | share must target exactly one user or an expiring link; photos must be EXIF-stripped with server-generated keys; favourites stay in-region without leaking coordinates; deleting a user cascades private data but keeps anonymised audit rows |
 | Accounts | display-name-only edits (role/email/id smuggling → 422), export contains only your data and no secrets, deletion needs the password, erases content, anonymises identity, keeps audit evidence, frees the email; last admin cannot delete themselves |
+| Favourites / BOLA (API1) | another user gets 404, identical to a missing id, on read, edit, delete, share, list-shares and revoke, and the data is unchanged; region server-derived; owner_id/region smuggling → 422; per-user cap |
+| Sharing / data exposure (API3) | shared and public views contain exactly the minimal fields; cloaked within half a cell diagonal at 100/500/1000 m; deterministic (no averaging); linked place never revealed; tokens shown once and stored hashed; revoked, expired, now-private and deleted-owner links → 404; share validation, self/duplicate shares, rate limit |
 | Admin (API5) | anonymous → 401 and ordinary user → 403 on every admin route; router-level guard asserted; role change is immediate and audited; no self role change; audit view filtered and self-audited |
 | Docs | `/docs` and `/openapi.json` return 404 in production |
 
@@ -123,8 +132,10 @@ Gitleaks, private-key detection and file hygiene before every local commit:
 - **Network exposure:** the API is published on `127.0.0.1` only; the database has no published port.
 - **Least-privilege database role:** the API connects as `geovault_app` (not superuser, cannot create
   roles, cannot read server files). PostGIS is installed by the superuser at init time.
-- **SQL injection:** every query is a static string with bound parameters; optional filters use
-  `(%(x)s IS NULL OR col = %(x)s)` instead of string building. Ruff's bandit rules (`S608`) run on all code.
+- **SQL injection:** every value is a bound parameter. Optional filters use
+  `(%(x)s IS NULL OR col = %(x)s)` and dynamic `UPDATE`s use `psycopg.sql` identifiers from an
+  allowlist. Ruff's bandit rules (`S608`) run on all code; the few suppressions are annotated
+  inline and only interpolate module constants (column lists), never request data.
 - **Resource limits (OWASP API4):** radius, result-count, offset and input-length caps; a 5 s
   `statement_timeout` on every DB connection.
 - **Container hardening:** non-root user (uid 10001), read-only root filesystem, all Linux
@@ -142,6 +153,9 @@ Gitleaks, private-key detection and file hygiene before every local commit:
   self-service route. Admin routes are guarded at router level by a role check read from the DB.
   Request models forbid unknown fields (mass assignment). Personal and admin responses are
   `Cache-Control: no-store`.
+- **Location privacy:** exact coordinates only ever reach the owner. Every other view is snapped
+  in SQL to a 100 m / 500 m / 1 km grid in the city's metric projection, with no note, email or
+  linked place. See **[docs/privacy/location-precision.md](docs/privacy/location-precision.md)**.
 - **Data rights:** JSON export of all personal data. Account deletion erases content,
   anonymises the account row and retains de-identified audit evidence.
 - **Audit log:** registration, login success/failure, rate limiting, refresh, reuse detection,
@@ -177,7 +191,7 @@ app/            FastAPI application (config, database pool, migrations runner, r
 db/init/        one-time database bootstrap (least-privilege app role)
 db/migrations/  numbered SQL migrations, applied automatically at API start-up
 data/           dataset catalogue (sources.py), fetcher, importer, raw snapshots, test seeds
-docs/           data sources, authentication design (more security docs follow)
+docs/           data sources, authentication design, privacy/location precision
 frontend/       static map UI (vanilla JS + vendored Leaflet)
 tests/          unit + integration tests (real PostGIS)
 compose.test.yml  isolated test stack (separate compose project)

@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from app import migrate
 from app.config import Settings, get_settings
 from app.database import create_pool
-from app.routers import admin, auth, places, users
+from app.routers import admin, auth, favourites, places, sharing, users
 from app.schemas.places import Health
 from app.security.rate_limit import LoginLimiter, RateLimiter
 
@@ -56,6 +56,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.settings = settings
     app.state.login_limiter = LoginLimiter()
     app.state.register_limiter = RateLimiter(limit=10, window_seconds=3600)
+    app.state.share_limiter = RateLimiter(limit=30, window_seconds=3600)
 
     @app.exception_handler(RequestValidationError)
     async def validation_error(request: Request, exc: RequestValidationError):
@@ -69,6 +70,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(auth.router)
     app.include_router(users.router)
     app.include_router(admin.router)
+    app.include_router(favourites.router)
+    app.include_router(sharing.router)
 
     # Mounted last so /api/* and /docs take precedence over static files.
     app.mount("/", StaticFiles(directory=settings.frontend_dir, html=True), name="frontend")

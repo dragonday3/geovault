@@ -43,8 +43,9 @@ def test_every_admin_route_is_protected():
 
 def test_admin_lists_users(client, dsn):
     admin = make_user(client, dsn, admin=True)
-    target = make_user(client, display_name="Findable Person")
-    r = client.get("/api/admin/users", params={"q": "Findable"}, headers=admin["headers"])
+    marker = f"Findable {uuid.uuid4().hex[:8]}"
+    target = make_user(client, display_name=marker)
+    r = client.get("/api/admin/users", params={"q": marker}, headers=admin["headers"])
     assert r.status_code == 200 and r.headers["cache-control"] == "no-store"
     assert [u["email"] for u in r.json()] == [target["email"]]
     assert "password_hash" not in r.text

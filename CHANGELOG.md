@@ -4,6 +4,20 @@ All notable changes to GeoVault. Format: [Keep a Changelog](https://keepachangel
 
 ## [Unreleased]
 
+### Added — Milestone 7: favourites and sharing (2026-11-20)
+- Favourites CRUD (`/api/favourites`). Server-derived region; create from coordinates or a public
+  place; exact location and private note returned only to the owner; per-user cap.
+- Object-level authorization via one `get_owned_favourite` dependency: non-owners get the same
+  404 as a missing id on every favourite and share route.
+- Sharing with registered users (by email) or expiring links (1 h to 30 days). Link tokens are
+  256-bit, shown once and stored as SHA-256. Revocation; share creation rate-limited per user.
+- `GET /api/shared/{token}` (anonymous, `Referrer-Policy: no-referrer`), `GET /api/shared/with-me`,
+  `GET /api/favourites/public`.
+- Migration `0007_cloaking`: SQL `cloak_point()` snaps non-owner locations to the centre of a
+  100/500/1000 m grid cell in each region's metric CRS (MGA 55 / UTM 43N). Shared views carry
+  no note, email or linked place; making a favourite private disables its shares.
+- `docs/privacy/location-precision.md`; 59 new tests (190 total).
+
 ### Added — Milestone 6: accounts and administration (2026-11-20)
 - `PATCH /api/users/me` (display name only), `GET /api/users/me/export` (JSON download),
   `DELETE /api/users/me` (password re-entry, rate-limited; erase content, anonymise identity,
