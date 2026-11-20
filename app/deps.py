@@ -8,7 +8,7 @@ the caller is, or what role they hold, is ever taken from the request body or th
 import uuid
 from typing import Annotated, Literal
 
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, HTTPException, Request, Response, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
 
@@ -66,3 +66,19 @@ def get_current_user(
 
 
 AuthUser = Annotated[CurrentUser, Depends(get_current_user)]
+
+
+def require_admin(user: AuthUser) -> CurrentUser:
+    """Function-level authorization (OWASP API5). The role comes from the users row loaded
+    in get_current_user, so it reflects promotions/demotions immediately."""
+    if user.role != "admin":
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Administrator role required")
+    return user
+
+
+AdminUser = Annotated[CurrentUser, Depends(require_admin)]
+
+
+def no_store(response: Response) -> None:
+    """Personal and administrative responses must never be cached by browsers or proxies."""
+    response.headers["Cache-Control"] = "no-store"

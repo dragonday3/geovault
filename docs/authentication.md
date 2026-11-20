@@ -42,6 +42,31 @@ sequenceDiagram
 | Secrets in error responses | Custom 422 handler drops the submitted `input` (FastAPI echoes it by default, which would include a rejected password) | `test_password_policy` asserts the password is not in the response |
 | Secrets in the audit trail | Audit rows hold only action, actor/target ids, IP, user agent. Attempted email addresses are not stored, because a password is often typed into the email field | `test_auth_events_are_audited_without_secrets` |
 
+## Authorization
+
+| Rule | Implementation | Verified by |
+|---|---|---|
+| Identity only from credentials | `get_current_user` (token + live DB row); self-service routes have no user id in path or body | `test_account_endpoints_require_authentication` |
+| Property-level authz (API3) | `UserUpdateIn` accepts only `display_name` (`extra="forbid"`) | `test_update_rejects_protected_or_invalid_fields` |
+| Function-level authz (API5) | `require_admin` on the admin **router**, so new routes inherit it; role read from DB | `test_admin_routes_reject_ordinary_users`, `test_every_admin_route_is_protected` |
+| No admin lock-out | admins cannot change their own role; the last admin cannot delete their account | `test_admin_cannot_change_own_role`, `test_last_admin_cannot_delete_account` |
+| First admin | operator CLI `app.manage promote-admin` (needs server access), audited with a null actor | `test_bootstrap_promotion_is_audited` |
+| Accountability | role changes, exports, deletions and audit-log viewing are audited | `test_role_change_takes_effect_immediately_and_is_audited`, `test_audit_view_filters_and_is_itself_audited` |
+
+## Account deletion and export
+
+- **Delete** (`DELETE /api/users/me`) requires re-entering the password, rate-limited like
+  login, so a stolen access token alone cannot erase an account. In one transaction:
+  - favourites, their shares and photos, shares received and refresh tokens are **deleted**;
+  - the user row is **anonymised**: email becomes `deleted-<id>@invalid`, name becomes
+    "Deleted user", the password hash becomes unusable, and `deleted_at` is set;
+  - audit rows are **retained** as security evidence. They contain no name, email or content.
+  The email address can be registered again immediately.
+- **Export** (`GET /api/users/me/export`) returns profile, favourites with exact coordinates and
+  notes (the user's own data), shares, photo metadata, sessions and the user's own activity.
+  Secrets are excluded (password hash, token hashes), and so are other people's personal
+  information: share recipients appear by display name only.
+
 ## Token storage: memory + HttpOnly cookie (decision)
 
 | Option | XSS impact | CSRF exposure | Verdict |

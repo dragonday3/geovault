@@ -7,7 +7,7 @@ and **Bengaluru, India**, developed as a security portfolio project: build it, t
 attack a deliberately vulnerable **local lab** instance, remediate, and prove the fixes with
 regression tests.
 
-> **Status: Milestone 5 — authentication.** Public places API + map over ~2,900 real places.
+> **Status: Milestone 6 — accounts and administration.** Public places API + map over ~2,900 real places.
 > Authentication, favourites,
 > sharing, lab mode, GeoServer and CI arrive in later milestones (see `CHANGELOG.md`).
 > Only features listed under *What works now* are implemented.
@@ -29,6 +29,12 @@ regression tests.
 | `POST /api/auth/refresh` | Rotate refresh token (cookie + `X-CSRF-Token`); reuse of an old token revokes the session |
 | `POST /api/auth/logout` | Revoke the session and clear cookies (requires `X-CSRF-Token`) |
 | `GET /api/users/me` | The authenticated user's profile (`Authorization: Bearer`) |
+| `PATCH /api/users/me` | Change display name. Any other field (e.g. `role`) is rejected with 422 |
+| `GET /api/users/me/export` | Download everything GeoVault holds about you as JSON |
+| `DELETE /api/users/me` | Delete your account (password re-entry required): content erased, identity anonymised |
+| `GET /api/admin/users` | Admin: search/list accounts |
+| `PATCH /api/admin/users/{id}/role` | Admin: grant/revoke admin (not your own role); audited |
+| `GET /api/admin/audit` | Admin: audit trail with filters (viewing it is itself audited) |
 | `GET /docs` | OpenAPI docs (local environment only; disabled when `GEOVAULT_ENV=production`) |
 
 Responses are GeoJSON with explicit response schemas.
@@ -64,6 +70,12 @@ curl.exe -s http://127.0.0.1:8000/api/health
 curl.exe -s "http://127.0.0.1:8000/api/places/near?lat=-37.8136&lon=144.9631&radius_m=1000&limit=5"
 ```
 
+Create the first administrator (operator-only; there is deliberately no HTTP route for it):
+
+```powershell
+docker compose exec api python -m app.manage promote-admin you@example.com
+```
+
 **Troubleshooting**
 
 - `port is already allocated` → another service uses 8000; set `GEOVAULT_API_PORT=8010` in `.env`.
@@ -74,7 +86,7 @@ curl.exe -s "http://127.0.0.1:8000/api/places/near?lat=-37.8136&lon=144.9631&rad
 ## Testing
 
 ```powershell
-docker compose -f compose.test.yml run --rm --build test   # 101 tests, ~6 s after the image is built
+docker compose -f compose.test.yml run --rm --build test   # 131 tests, ~20 s after the image is built
 docker compose -f compose.test.yml down -v                 # remove the throwaway test database
 ```
 
@@ -95,6 +107,8 @@ database host other than the dedicated test instance.
 | Frontend (static) | no `innerHTML`/`eval`/`document.write`; no inline scripts or handlers (CSP-ready); vendored Leaflet matches SRI hashes |
 | Authentication | password policy, generic failures, Argon2 timing parity, rate limits, hardened cookies, `alg=none`/forged/expired/wrong-audience JWTs rejected, role claim ignored, refresh rotation + reuse detection, logout revocation, hashed token storage, secret-free audit |
 | Schema constraints | share must target exactly one user or an expiring link; photos must be EXIF-stripped with server-generated keys; favourites stay in-region without leaking coordinates; deleting a user cascades private data but keeps anonymised audit rows |
+| Accounts | display-name-only edits (role/email/id smuggling → 422), export contains only your data and no secrets, deletion needs the password, erases content, anonymises identity, keeps audit evidence, frees the email; last admin cannot delete themselves |
+| Admin (API5) | anonymous → 401 and ordinary user → 403 on every admin route; router-level guard asserted; role change is immediate and audited; no self role change; audit view filtered and self-audited |
 | Docs | `/docs` and `/openapi.json` return 404 in production |
 
 **CI** (`.github/workflows/ci.yml`, on every push and PR) runs ruff, the test suite,
@@ -124,8 +138,15 @@ Gitleaks, private-key detection and file hygiene before every local commit:
   path), HS256 JWTs with pinned algorithm and required claims, role read from the DB not the
   token, and refresh-token rotation with reuse detection. Design and trade-offs:
   **[docs/authentication.md](docs/authentication.md)**.
-- **Audit log:** registration, login success/failure, rate limiting, refresh, reuse detection
-  and logout are recorded without passwords, tokens or attempted email addresses.
+- **Authorization:** identity always comes from the token, and there is no user id in any
+  self-service route. Admin routes are guarded at router level by a role check read from the DB.
+  Request models forbid unknown fields (mass assignment). Personal and admin responses are
+  `Cache-Control: no-store`.
+- **Data rights:** JSON export of all personal data. Account deletion erases content,
+  anonymises the account row and retains de-identified audit evidence.
+- **Audit log:** registration, login success/failure, rate limiting, refresh, reuse detection,
+  logout, profile changes, export, deletion, role changes and audit viewing are recorded
+  without passwords, tokens or attempted email addresses.
 - **Secrets:** read from environment (`.env`, gitignored); the DB DSN is a `SecretStr` so it never
   appears in logs or reprs.
 

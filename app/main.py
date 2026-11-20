@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from app import migrate
 from app.config import Settings, get_settings
 from app.database import create_pool
-from app.routers import auth, places, users
+from app.routers import admin, auth, places, users
 from app.schemas.places import Health
 from app.security.rate_limit import LoginLimiter, RateLimiter
 
@@ -68,6 +68,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(places.router)
     app.include_router(auth.router)
     app.include_router(users.router)
+    app.include_router(admin.router)
 
     # Mounted last so /api/* and /docs take precedence over static files.
     app.mount("/", StaticFiles(directory=settings.frontend_dir, html=True), name="frontend")

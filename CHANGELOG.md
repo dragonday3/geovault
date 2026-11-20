@@ -4,6 +4,16 @@ All notable changes to GeoVault. Format: [Keep a Changelog](https://keepachangel
 
 ## [Unreleased]
 
+### Added — Milestone 6: accounts and administration (2026-11-20)
+- `PATCH /api/users/me` (display name only), `GET /api/users/me/export` (JSON download),
+  `DELETE /api/users/me` (password re-entry, rate-limited; erase content, anonymise identity,
+  retain audit evidence; last admin protected).
+- `GET /api/admin/users`, `PATCH /api/admin/users/{id}/role`, `GET /api/admin/audit`, all behind a
+  router-level `require_admin` that reads the role from the database; no self role change.
+- Operator CLI `python -m app.manage promote-admin <email>` to bootstrap the first admin (audited).
+- `Cache-Control: no-store` on all account and admin responses.
+- 30 new tests (131 total); authorization and data-rights sections in `docs/authentication.md`.
+
 ### Added — Milestone 5: authentication (2026-11-20)
 - Migrations `0004` (users, refresh_tokens, audit_log), `0005` (favourites, shares, photos with
   defensive constraints), `0006` (checkins_synthetic, synthetic data only).
