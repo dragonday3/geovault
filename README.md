@@ -7,7 +7,7 @@ and **Bengaluru, India**, developed as a security portfolio project: build it, t
 attack a deliberately vulnerable **local lab** instance, remediate, and prove the fixes with
 regression tests.
 
-> **Status: Milestone 8 — photos.** Public places API + map over ~2,900 real places.
+> **Status: Milestone 9 — HTTP hardening and logging.** Public places API + map over ~2,900 real places.
 > Authentication, favourites,
 > sharing, lab mode, GeoServer and CI arrive in later milestones (see `CHANGELOG.md`).
 > Only features listed under *What works now* are implemented.
@@ -95,7 +95,7 @@ docker compose exec api python -m app.manage promote-admin you@example.com
 ## Testing
 
 ```powershell
-docker compose -f compose.test.yml run --rm --build test   # 228 tests, ~40 s after the image is built
+docker compose -f compose.test.yml run --rm --build test   # 256 tests, ~30 s after the image is built
 docker compose -f compose.test.yml down -v                 # remove the throwaway test database
 ```
 
@@ -121,6 +121,8 @@ database host other than the dedicated test instance.
 | Sharing / data exposure (API3) | shared and public views contain exactly the minimal fields; cloaked within half a cell diagonal at 100/500/1000 m; deterministic (no averaging); linked place never revealed; tokens shown once and stored hashed; revoked, expired, now-private and deleted-owner links → 404; share validation, self/duplicate shares, rate limit |
 | Photos | GPS/camera/XMP/PNG-text metadata gone from the downloaded file (fixtures proven to contain it first); orientation preserved; SVG/HTML/GIF/truncated files and decompression bombs → 422; > 5 MB → 413 and no length → 411, before the body is parsed; filename and content type ignored; safe delivery headers; owner, link and recipient access scoped; replace/delete/account deletion remove files |
 | Admin (API5) | anonymous → 401 and ordinary user → 403 on every admin route; router-level guard asserted; role change is immediate and audited; no self role change; audit view filtered and self-audited |
+| Hardening (API8) | CSP (no `unsafe-inline`/`eval`, `frame-ancestors 'none'`), nosniff, X-Frame-Options, Referrer/Permissions/COOP/CORP on every response incl. 404/401/500; route CSP preserved; relaxed CSP only on local `/docs`; HSTS only in production; no CORS for foreign origins; no server banner |
+| Errors and logging | unhandled exceptions → generic JSON 500 with request ID, no traceback; request IDs validated; JSON logs redact JWTs, bearer tokens, passwords, emails, DSNs, share tokens and coordinates; access log has no query strings; full user journey leaves no secrets in logs |
 | Docs | `/docs` and `/openapi.json` return 404 in production |
 
 **CI** (`.github/workflows/ci.yml`, on every push and PR) runs ruff, the test suite,
@@ -141,6 +143,15 @@ Gitleaks, private-key detection and file hygiene before every local commit:
   inline and only interpolate module constants (column lists), never request data.
 - **Resource limits (OWASP API4):** radius, result-count, offset and input-length caps; a 5 s
   `statement_timeout` on every DB connection.
+- **HTTP hardening:** strict CSP (self-hosted scripts, no inline code, only OSM tiles as a
+  third-party image source, `frame-ancestors 'none'`), `nosniff`, `X-Frame-Options: DENY`,
+  Referrer, Permissions, COOP and CORP policies, `no-store` on API responses, and HSTS in
+  production. No CORS (same-origin UI). Uvicorn's server banner is disabled.
+- **Errors and logging:** one middleware turns any unhandled exception into a generic JSON 500
+  with a request ID; the traceback goes only to the server log. Logs are one JSON object per
+  line with a request ID, and every string is scrubbed of JWTs, bearer tokens, password/secret
+  fields, emails, DB DSNs, share tokens and coordinates. Uvicorn's raw access log is replaced
+  by one that omits query strings (search locations).
 - **Container hardening:** non-root user (uid 10001), read-only root filesystem, all Linux
   capabilities dropped, `no-new-privileges`, base images pinned by digest, Debian security
   updates applied at build, health checks. Test tooling lives in a separate `test` build stage

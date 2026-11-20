@@ -4,6 +4,17 @@ All notable changes to GeoVault. Format: [Keep a Changelog](https://keepachangel
 
 ## [Unreleased]
 
+### Added — Milestone 9: HTTP hardening and logging (2026-11-20)
+- `SecurityHeaders` middleware: strict CSP, nosniff, X-Frame-Options, Referrer-Policy,
+  Permissions-Policy, COOP/CORP, `no-store` on `/api/*`, HSTS in production; route-specific
+  headers preserved; relaxed CSP only for local Swagger UI.
+- `RequestContext` middleware: validated/generated `X-Request-ID`, redacting JSON access log
+  without query strings, and a central generic 500 handler (details only in server logs).
+- JSON logging for app and uvicorn with redaction of JWTs, bearer tokens, password/secret
+  fields, emails, DSNs, share tokens and coordinates.
+- Uvicorn runs with `--no-server-header --no-access-log`. CORS deliberately not enabled.
+- 28 new tests (256 total).
+
 ### Added — Milestone 8: photos (2026-11-20)
 - `POST/GET/DELETE /api/favourites/{id}/photo` (owner) and photo routes for valid share links
   and received shares; `has_photo` on owner and shared views.

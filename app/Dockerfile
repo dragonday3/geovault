@@ -57,4 +57,8 @@ HEALTHCHECK --interval=15s --timeout=3s --start-period=20s --retries=3 \
 
 # 0.0.0.0 inside the container is required for Docker port publishing;
 # host exposure is limited by the 127.0.0.1 port mapping in docker-compose.yml.
-CMD ["uvicorn", "--factory", "app.main:create_app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips", "127.0.0.1"]
+# --no-server-header: do not advertise the server software; --no-access-log: uvicorn's access
+# log writes full URLs (query strings hold search locations, paths hold share tokens) - the app
+# writes its own redacted access log instead.
+CMD ["uvicorn", "--factory", "app.main:create_app", "--host", "0.0.0.0", "--port", "8000", \
+     "--proxy-headers", "--forwarded-allow-ips", "127.0.0.1", "--no-server-header", "--no-access-log"]

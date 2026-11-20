@@ -12,8 +12,10 @@ from fastapi.staticfiles import StaticFiles
 from app import migrate
 from app.config import Settings, get_settings
 from app.database import create_pool
+from app.observability import RequestContext, configure_logging
 from app.routers import admin, auth, favourites, places, sharing, users
 from app.schemas.places import Health
+from app.security.headers import SecurityHeaders
 from app.security.rate_limit import LoginLimiter, RateLimiter
 from app.security.upload_guard import UploadGuard
 from app.services.photos import LocalPhotoStore, PhotoLimits
@@ -23,6 +25,7 @@ log = logging.getLogger("geovault")
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
+    configure_logging()
     dsn = settings.database_url.get_secret_value()
 
     @asynccontextmanager
@@ -61,7 +64,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.share_limiter = RateLimiter(limit=30, window_seconds=3600)
     app.state.photo_limits = PhotoLimits()
     app.state.photo_store = LocalPhotoStore(settings.photo_dir)
+    # Middleware order (outermost last): RequestContext -> SecurityHeaders -> UploadGuard -> app.
     app.add_middleware(UploadGuard, max_bytes_getter=lambda: app.state.photo_limits.max_bytes)
+    app.add_middleware(
+        SecurityHeaders,
+        production=settings.env == "production",
+        docs_paths=("/docs", "/docs/oauth2-redirect") if settings.docs_enabled else (),
+    )
+    app.add_middleware(RequestContext)
+    # CORS: deliberately NO CORSMiddleware. The UI is served from the same origin, so the
+    # browser's same-origin policy already blocks other sites from reading API responses.
 
     @app.exception_handler(RequestValidationError)
     async def validation_error(request: Request, exc: RequestValidationError):
