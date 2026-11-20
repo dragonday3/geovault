@@ -1,0 +1,46 @@
+# GeoVault local stack (SECURE mode). All published ports bind to 127.0.0.1 only.
+name: geovault
+
+services:
+  db:
+    image: postgis/postgis:16-3.5@sha256:94146ac37bc61e2322f88016056c5920729cb8c64c8542ed590af8fc2abdac07
+    environment:
+      POSTGRES_DB: geovault
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      GEOVAULT_DB_PASSWORD: ${GEOVAULT_DB_PASSWORD:?set GEOVAULT_DB_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init/20_app_role.sh:/docker-entrypoint-initdb.d/20_app_role.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d geovault"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [backend]
+    # No published port: only containers on the backend network can reach the database.
+
+  api:
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    image: geovault-api:local
+    environment:
+      GEOVAULT_ENV: local
+      GEOVAULT_DATABASE_URL: postgresql://geovault_app:${GEOVAULT_DB_PASSWORD}@db:5432/geovault
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${GEOVAULT_API_PORT:-8000}:8000"
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    networks: [backend]
+
+networks:
+  backend:
+
+volumes:
+  pgdata:

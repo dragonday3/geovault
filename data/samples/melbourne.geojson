@@ -1,0 +1,322 @@
+{
+ "type": "FeatureCollection",
+ "name": "geovault_sample_places_melbourne",
+ "_comment": "Hand-made seed of well-known public Melbourne places (approximate coordinates). Replaced by City of Melbourne open data in M2.",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "s01",
+    "name": "Federation Square",
+    "category": "Landmark"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     144.969,
+     -37.818
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "s02",
+    "name": "Flinders Street Station",
+    "category": "Landmark"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     144.9671,
+     -37.8183
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "s03",
+    "name": "Melbourne Town Hall",
+    "category": "Landmark"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     144.9667,
+     -37.815
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "s04",
+    "name": "St Paul's Cathedral",
+    "category": "Landmark"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     144.9676,
+     -37.817
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "s05",
+    "name": "Shrine of Remembrance",
+    "category": "Landmark"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     144.9735,
+     -37.8305
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "s06",
+    "name": "Eureka Tower",
+    "category": "Landmark"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     144.9644,
+     -37.8214
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "s07",
+    "name": "State Library Victoria",
+    "category": "Library"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     144.9646,
+     -37.8098
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "s08",
+    "name": "City Library",
+    "category": "Library"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     144.9665,
+     -37.8167
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "s09",
+    "name": "Library at The Dock",
+    "category": "Library"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     144.9399,
+     -37.817
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "s10",
+    "name": "East Melbourne Library",
+    "category": "Library"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     144.9862,
+     -37.8128
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "s11",
+    "name": "Royal Botanic Gardens Victoria",
+    "category": "Park and garden"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     144.9796,
+     -37.8304
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "s12",
+    "name": "Carlton Gardens",
+    "category": "Park and garden"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     144.9713,
+     -37.806
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "s13",
+    "name": "Fitzroy Gardens",
+    "category": "Park and garden"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     144.9802,
+     -37.8134
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "s14",
+    "name": "Treasury Gardens",
+    "category": "Park and garden"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     144.976,
+     -37.8143
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "s15",
+    "name": "Flagstaff Gardens",
+    "category": "Park and garden"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     144.9545,
+     -37.8107
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "s16",
+    "name": "Birrarung Marr",
+    "category": "Park and garden"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     144.9737,
+     -37.8183
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "s17",
+    "name": "Melbourne Museum",
+    "category": "Museum and gallery"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     144.9717,
+     -37.8033
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "s18",
+    "name": "Royal Exhibition Building",
+    "category": "Museum and gallery"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     144.9716,
+     -37.8047
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "s19",
+    "name": "National Gallery of Victoria",
+    "category": "Museum and gallery"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     144.9689,
+     -37.8226
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "s20",
+    "name": "Queen Victoria Market",
+    "category": "Market"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     144.9568,
+     -37.8076
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "s21",
+    "name": "Melbourne Cricket Ground",
+    "category": "Sport and recreation"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     144.9834,
+     -37.82
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,36 @@
+# Secrets / local env
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Local runtime data (photos, lab artefacts)
+storage/
+*.log
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local AI assistant files (kept out of the public repo)
+CLAUDE.md
+CLAUDE.local.md
+.claude/
+graphify-out/
+
+# Internal planning notes (contain local machine details)
+docs/phase-0-plan.md

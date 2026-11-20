@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GeoVault — public places</title>
+  <!-- Leaflet 1.9.4 is vendored (served from our own origin) and pinned with SRI. -->
+  <link rel="stylesheet" href="/vendor/leaflet/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="logo" aria-hidden="true">◈</span> GeoVault</div>
+    <div id="subtitle" class="subtitle">Public places</div>
+    <label class="region-picker">
+      <span class="visually-hidden">Region</span>
+      <select id="region" aria-label="Region"></select>
+    </label>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar" aria-label="Search and results">
+      <form id="search-form" class="search" role="search">
+        <input id="search" type="search" placeholder="Search places…" maxlength="100"
+               aria-label="Search places by name" autocomplete="off">
+      </form>
+
+      <section aria-labelledby="cat-heading">
+        <h2 id="cat-heading" class="section-title">Categories</h2>
+        <div id="categories" class="chips"></div>
+      </section>
+
+      <section class="near">
+        <h2 class="section-title">Nearby</h2>
+        <div class="near-row">
+          <select id="radius" aria-label="Search radius">
+            <option value="250">250 m</option>
+            <option value="500">500 m</option>
+            <option value="1000" selected>1 km</option>
+            <option value="2000">2 km</option>
+            <option value="5000">5 km</option>
+          </select>
+          <button id="near-btn" type="button">Find near map centre</button>
+          <button id="clear-btn" type="button" class="ghost">Reset</button>
+        </div>
+        <p class="hint">Tip: click the map to search around that point.</p>
+      </section>
+
+      <section id="detail" class="detail" hidden aria-live="polite">
+        <h2 id="detail-name"></h2>
+        <p><span id="detail-category" class="badge"></span></p>
+        <dl>
+          <dt>Coordinates</dt><dd id="detail-coords"></dd>
+          <dt>Source</dt><dd id="detail-source"></dd>
+          <dt id="detail-distance-label" hidden>Distance</dt><dd id="detail-distance" hidden></dd>
+        </dl>
+      </section>
+
+      <section class="results-wrap">
+        <h2 class="section-title">Results <span id="count" class="count"></span></h2>
+        <ul id="results" class="results"></ul>
+        <p id="status" class="status" role="status"></p>
+      </section>
+    </aside>
+
+    <div id="map" class="map" role="application" aria-label="Map"></div>
+  </main>
+
+  <script src="/vendor/leaflet/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="></script>
+  <script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,217 @@
+{
+ "type": "FeatureCollection",
+ "name": "geovault_sample_places_bengaluru",
+ "_comment": "Hand-made seed of well-known public Bengaluru places (approximate coordinates). Replaced by open civic data in M2.",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "b01",
+    "name": "Vidhana Soudha",
+    "category": "Landmark"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     77.5907,
+     12.9791
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "b02",
+    "name": "Bangalore Palace",
+    "category": "Landmark"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     77.5921,
+     12.9988
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "b03",
+    "name": "Tipu Sultan's Summer Palace",
+    "category": "Landmark"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     77.5737,
+     12.9593
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "b04",
+    "name": "Dodda Basavana Gudi (Bull Temple)",
+    "category": "Landmark"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     77.568,
+     12.9425
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "b05",
+    "name": "Lalbagh Botanical Garden",
+    "category": "Park and garden"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     77.5848,
+     12.9507
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "b06",
+    "name": "Cubbon Park",
+    "category": "Park and garden"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     77.5929,
+     12.9763
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "b07",
+    "name": "Ulsoor Lake",
+    "category": "Park and garden"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     77.62,
+     12.983
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "b08",
+    "name": "State Central Library",
+    "category": "Library"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     77.5949,
+     12.9746
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "b09",
+    "name": "Visvesvaraya Industrial and Technological Museum",
+    "category": "Museum and gallery"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     77.5963,
+     12.9752
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "b10",
+    "name": "National Gallery of Modern Art, Bengaluru",
+    "category": "Museum and gallery"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     77.588,
+     12.9891
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "b11",
+    "name": "Jawaharlal Nehru Planetarium",
+    "category": "Museum and gallery"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     77.5897,
+     12.9847
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "b12",
+    "name": "M. Chinnaswamy Stadium",
+    "category": "Sport and recreation"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     77.5993,
+     12.9788
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "b13",
+    "name": "Krishna Rajendra Market",
+    "category": "Market"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     77.5775,
+     12.9634
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "b14",
+    "name": "Russell Market",
+    "category": "Market"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     77.6066,
+     12.9846
+    ]
+   }
+  }
+ ]
+}

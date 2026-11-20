@@ -1,0 +1,7 @@
+* text=auto
+*.sh text eol=lf
+*.sql text eol=lf
+Dockerfile text eol=lf
+*.png binary
+# Vendored files must stay byte-identical or their SRI hashes break
+frontend/vendor/** -text
