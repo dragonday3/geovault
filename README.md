@@ -1,11 +1,13 @@
 # GeoVault
 
+[![CI](https://github.com/dragonday3/geovault/actions/workflows/ci.yml/badge.svg)](https://github.com/dragonday3/geovault/actions/workflows/ci.yml)
+
 A multi-region geospatial web application built on public open data for **Melbourne, Australia**
 and **Bengaluru, India**, developed as a security portfolio project: build it, threat-model it,
 attack a deliberately vulnerable **local lab** instance, remediate, and prove the fixes with
 regression tests.
 
-> **Status: Milestone 2 — real open data.** Public places API + map over ~2,900 real places.
+> **Status: Milestone 3 — tests and CI.** Public places API + map over ~2,900 real places.
 > Authentication, favourites,
 > sharing, lab mode, GeoServer and CI arrive in later milestones (see `CHANGELOG.md`).
 > Only features listed under *What works now* are implemented.
@@ -64,6 +66,37 @@ curl.exe -s "http://127.0.0.1:8000/api/places/near?lat=-37.8136&lon=144.9631&rad
 - Changed DB passwords after the first run? The DB is initialised once per volume:
   `docker compose down -v` (**deletes local data**) then start again.
 
+## Testing
+
+```powershell
+docker compose -f compose.test.yml run --rm --build test   # 50 tests, ~3 s after the image is built
+docker compose -f compose.test.yml down -v                 # remove the throwaway test database
+```
+
+The suite runs against a real PostGIS database, not mocks, because the properties under test
+only exist there: bound parameters, constraints, triggers and role privileges. The database is
+in-memory (tmpfs) and lives in a **separate compose project** (`geovault-test`), so tearing it
+down can never touch the dev database. `tests/conftest.py` also refuses to run against any
+database host other than the dedicated test instance.
+
+| Area | What is verified |
+|---|---|
+| API behaviour | regions, categories, search, bbox, nearest-first ordering, 404s |
+| Input validation / API4 | radius, limit, offset, query length, bbox shape, coordinate range, region pattern → 422 |
+| SQL injection | classic, stacked-query and UNION payloads in `category` and `q` are inert (200, no rows, nothing dropped) |
+| Database | app role is not superuser and cannot read server files; region-bounds trigger; unique keys; migrations idempotent; malicious migration filenames refused |
+| Data integrity | tampered snapshot refused with DB untouched; provenance recorded; idempotent re-import; stale rows pruned |
+| Adapters | private dwellings/offices excluded; shared category vocabulary; stable ids; OSM mapping |
+| Frontend (static) | no `innerHTML`/`eval`/`document.write`; no inline scripts or handlers (CSP-ready); vendored Leaflet matches SRI hashes |
+| Docs | `/docs` and `/openapi.json` return 404 in production |
+
+**CI** (`.github/workflows/ci.yml`, on every push and PR) runs ruff, the test suite,
+Gitleaks over the full history, pip-audit, a Trivy image scan (fails on fixable
+HIGH/CRITICAL) and a Trivy config scan. Actions are pinned to commit SHAs, scanner images
+are pinned by digest, and the workflow token is read-only. **Pre-commit** runs ruff,
+Gitleaks, private-key detection and file hygiene before every local commit:
+`py -3.10 -m pip install pre-commit` then `py -3.10 -m pre_commit install`.
+
 ## Security design (implemented so far)
 
 - **Network exposure:** the API is published on `127.0.0.1` only; the database has no published port.
@@ -74,7 +107,9 @@ curl.exe -s "http://127.0.0.1:8000/api/places/near?lat=-37.8136&lon=144.9631&rad
 - **Resource limits (OWASP API4):** radius, result-count, offset and input-length caps; a 5 s
   `statement_timeout` on every DB connection.
 - **Container hardening:** non-root user (uid 10001), read-only root filesystem, all Linux
-  capabilities dropped, `no-new-privileges`, base images pinned by digest, health checks.
+  capabilities dropped, `no-new-privileges`, base images pinned by digest, Debian security
+  updates applied at build, health checks. Test tooling lives in a separate `test` build stage
+  and never ships in the runtime image.
 - **Frontend:** API data is rendered with `textContent` only (no `innerHTML`); Leaflet is self-hosted
   and pinned with Subresource Integrity hashes.
 - **Secrets:** read from environment (`.env`, gitignored); the DB DSN is a `SecretStr` so it never
@@ -109,7 +144,9 @@ db/migrations/  numbered SQL migrations, applied automatically at API start-up
 data/           dataset catalogue (sources.py), fetcher, importer, raw snapshots, test seeds
 docs/           data sources (security documentation follows in later milestones)
 frontend/       static map UI (vanilla JS + vendored Leaflet)
-.github/        Dependabot configuration (CI workflows arrive in milestone 3)
+tests/          unit + integration tests (real PostGIS)
+compose.test.yml  isolated test stack (separate compose project)
+.github/        CI workflow and Dependabot configuration
 ```
 
 ## Scope and ethics

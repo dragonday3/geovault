@@ -1,0 +1,92 @@
+# CI: lint, tests against real PostGIS, secret scan, dependency audit, image + config scan.
+# Third-party actions are pinned to full commit SHAs; scanner images are pinned by digest.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read  # least privilege: no job can write to the repo
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GITLEAKS_IMAGE: zricethezav/gitleaks@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f  # v8.30.1
+  TRIVY_IMAGE: aquasec/trivy@sha256:8f6bb947dbc528902e11f2f5be52f7b519f6a39d5d148f41166f2040499768fb  # 0.76.2
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
+        with:
+          python-version: "3.12"
+      - run: python -m pip install ruff==0.17.6
+      - run: ruff check .
+      - run: ruff format --check .
+
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Generate throwaway database credentials
+        run: |
+          umask 077
+          {
+            echo "POSTGRES_PASSWORD=$(openssl rand -hex 24)"
+            echo "GEOVAULT_DB_PASSWORD=$(openssl rand -hex 24)"
+          } > .env
+      - name: Run test suite (API, DB constraints, import integrity, static frontend checks)
+        run: docker compose -f compose.test.yml run --rm --build test
+      - name: Tear down
+        if: always()
+        run: docker compose -f compose.test.yml down -v
+
+  secrets:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0  # scan the full history, not just the last commit
+          persist-credentials: false
+      - name: Gitleaks
+        run: docker run --rm -v "$PWD:/repo" "$GITLEAKS_IMAGE" git /repo --redact --no-banner --verbose
+
+  dependencies:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
+        with:
+          python-version: "3.12"
+      - run: python -m pip install pip-audit==2.10.1
+      - name: Audit pinned Python dependencies for known vulnerabilities
+        run: pip-audit --strict -r app/requirements-dev.txt
+
+  image-scan:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build runtime image
+        run: docker build -f app/Dockerfile --target runtime -t geovault-api:ci .
+      - name: Trivy image scan (fail on fixable HIGH/CRITICAL)
+        run: >
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$TRIVY_IMAGE"
+          image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 --no-progress geovault-api:ci
+      - name: Trivy config scan (Dockerfile, compose, workflows)
+        run: >
+          docker run --rm -v "$PWD:/src:ro" "$TRIVY_IMAGE"
+          config --severity HIGH,CRITICAL --exit-code 1 /src

@@ -24,6 +24,7 @@ services:
     build:
       context: .
       dockerfile: app/Dockerfile
+      target: runtime
     image: geovault-api:local
     environment:
       GEOVAULT_ENV: local

@@ -4,6 +4,21 @@ All notable changes to GeoVault. Format: [Keep a Changelog](https://keepachangel
 
 ## [Unreleased]
 
+### Added — Milestone 3: tests and CI (2026-11-20)
+- 50 pytest tests against real PostGIS: API behaviour, input caps (API4), SQL-injection payloads,
+  DB privileges/constraints/trigger/migrations, import integrity and pruning, adapter privacy
+  exclusions, static frontend XSS/CSP/SRI guards, docs disabled in production.
+- `compose.test.yml`: isolated test project (`geovault-test`) with an in-memory database;
+  `tests/conftest.py` refuses any non-test database host.
+- Dockerfile `test` stage (pytest never ships in the runtime image); `app/requirements-dev.txt`.
+- GitHub Actions CI: ruff, tests, Gitleaks (full history), pip-audit, Trivy image + config scans;
+  SHA-pinned actions, digest-pinned scanner images, read-only token.
+- Pre-commit hooks: ruff, Gitleaks, private-key detection, YAML/JSON checks, file hygiene.
+
+### Security
+- Trivy found HIGH CVE-2026-85091 (zlib heap overflow) in the Debian base layer; the image now
+  applies Debian security updates at build time (zlib1g 1.3.1-1+deb13u1). Image scan is clean.
+
 ### Added — Milestone 2: real open data (2026-11-20)
 - Dataset catalogue `data/sources.py`: 5 City of Melbourne datasets (CC BY 4.0) and an
   OpenStreetMap Bengaluru extract (ODbL), each with an adapter into one shared category list.

@@ -1,5 +1,7 @@
 # syntax=docker/dockerfile:1
 # Build context is the repository root (see docker-compose.yml).
+# Stages: base (runtime deps) -> test (adds pytest + tests) | runtime (final, default target).
+
 FROM python@sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b AS base
 # ^ python:3.12-slim, pinned by digest so builds are reproducible; Dependabot bumps it.
 
@@ -7,6 +9,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Apply Debian security fixes released after the base image was built (e.g. zlib
+# CVE-2026-85091, caught by Trivy). The digest pin keeps the starting point reproducible.
+RUN apt-get update \
+ && apt-get -y upgrade --no-install-recommends \
+ && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /srv
 COPY app/requirements.txt /tmp/requirements.txt
@@ -16,6 +24,23 @@ RUN python -m pip install --no-compile -r /tmp/requirements.txt && rm /tmp/requi
 RUN groupadd --system --gid 10001 geovault \
  && useradd --system --uid 10001 --gid geovault --no-create-home --shell /usr/sbin/nologin geovault
 
+
+# --- test: same base + test tooling and the test suite. Never shipped. ---------------------
+FROM base AS test
+COPY app/requirements.txt app/requirements-dev.txt /tmp/
+RUN python -m pip install --no-compile -r /tmp/requirements-dev.txt && rm /tmp/requirements*.txt
+COPY --chown=root:root pyproject.toml /srv/
+COPY --chown=root:root app/ /srv/app/
+COPY --chown=root:root db/migrations/ /srv/db/migrations/
+COPY --chown=root:root frontend/ /srv/frontend/
+COPY --chown=root:root data/ /srv/data/
+COPY --chown=root:root tests/ /srv/tests/
+USER 10001:10001
+CMD ["pytest"]
+
+
+# --- runtime: the image that actually runs. Last stage = default build target. -----------
+FROM base AS runtime
 COPY --chown=root:root app/ /srv/app/
 COPY --chown=root:root db/migrations/ /srv/db/migrations/
 COPY --chown=root:root frontend/ /srv/frontend/

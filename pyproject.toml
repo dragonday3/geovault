@@ -12,3 +12,16 @@ extend-exclude = ["frontend/vendor"]
 # S = flake8-bandit security rules. S608 (SQL built from strings) must stay silent on
 # secure code; the only permitted exception will be the documented LAB-08 injection point.
 select = ["E", "F", "W", "I", "B", "UP", "S"]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests legitimately use assert and fixed test values.
+"tests/**" = ["S101", "S105", "S106"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [".", "data"]
+# Read-only container filesystem: no cache directory; show reasons for any skip/xfail.
+addopts = "-p no:cacheprovider -ra --strict-markers"
+
+[tool.ruff.lint.isort]
+known-first-party = ["app", "sources", "load_places", "import_sources"]
