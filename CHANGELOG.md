@@ -4,6 +4,19 @@ All notable changes to GeoVault. Format: [Keep a Changelog](https://keepachangel
 
 ## [Unreleased]
 
+### Added — Milestone 12: GeoServer (2026-11-21)
+- Opt-in `geoserver` compose profile: GeoServer 2.28.0 (digest-pinned) on 127.0.0.1:8080,
+  mandatory admin password, demo data skipped, unprivileged Tomcat, `cap_drop: ALL` plus the minimum
+  needed to drop privileges, `no-new-privileges`, CORS off.
+- `geoserver_ro` database role (`db/init/30_geoserver_role.sh`, idempotent): SELECT on the
+  `public_places` view only (migration `0010`), read-only transactions, statement timeout.
+- `geoserver/bootstrap.py` (REST, idempotent): workspace, PostGIS store as `geoserver_ro`, one
+  published layer, WFS service level BASIC (no transactions), WCS disabled.
+- `geoserver/verify.py`: 16 checks, including default/anonymous credentials refused, only
+  `public_places` advertised, private typeNames refused, WFS-T rejected, an admin-published
+  `favourites` layer returning no data, and no LAN exposure. All pass.
+- `tests/integration/test_geoserver_role.py` (12 tests, CI) and `docs/geoserver.md`.
+
 ### Added — Milestone 10: the full interface (2026-11-21)
 - New visual world, the "safe-deposit hall": vault-green enamel rail and header, steel map, brass
   reserved for number plates, the primary action and focus, engraved condensed-caps plates,

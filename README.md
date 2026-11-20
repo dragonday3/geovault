@@ -7,7 +7,7 @@ A multi-region geospatial web application built on public open data for **Melbou
 attack a deliberately vulnerable **local lab** instance, remediate, and prove the fixes with
 regression tests.
 
-> **Status: Milestone 10 — the full interface.** Public places API + map over ~2,900 real places.
+> **Status: Milestone 12 — GeoServer (WMS/WFS).** Public places API + map over ~2,900 real places.
 > Authentication, favourites,
 > sharing, lab mode, GeoServer and CI arrive in later milestones (see `CHANGELOG.md`).
 > Only features listed under *What works now* are implemented.
@@ -110,6 +110,11 @@ Create the first administrator (operator-only; there is deliberately no HTTP rou
 docker compose exec api python -m app.manage promote-admin you@example.com
 ```
 
+**GeoServer (optional, WMS/WFS for GIS clients):** `docker compose --profile geoserver up -d geoserver`,
+then `py -3.10 geoserver/bootstrap.py` and `py -3.10 geoserver/verify.py`. Only the public places
+layer is published, through a read-only DB role that cannot see private tables. Details and
+verification: **[docs/geoserver.md](docs/geoserver.md)**.
+
 **Troubleshooting**
 
 - `port is already allocated` → another service uses 8000; set `GEOVAULT_API_PORT=8010` in `.env`.
@@ -120,7 +125,7 @@ docker compose exec api python -m app.manage promote-admin you@example.com
 ## Testing
 
 ```powershell
-docker compose -f compose.test.yml run --rm --build test   # 283 tests, ~45 s after the image is built
+docker compose -f compose.test.yml run --rm --build test   # 295 tests, ~45 s after the image is built
 docker compose -f compose.test.yml down -v                 # remove the throwaway test database
 ```
 
@@ -149,6 +154,7 @@ database host other than the dedicated test instance.
 | Hardening (API8) | CSP (no `unsafe-inline`/`eval`, `frame-ancestors 'none'`), nosniff, X-Frame-Options, Referrer/Permissions/COOP/CORP on every response incl. 404/401/500; route CSP preserved; relaxed CSP only on local `/docs`; HSTS only in production; no CORS for foreign origins; no server banner |
 | Errors and logging | unhandled exceptions → generic JSON 500 with request ID, no traceback; request IDs validated; JSON logs redact JWTs, bearer tokens, passwords, emails, DSNs, share tokens and coordinates; access log has no query strings; full user journey leaves no secrets in logs |
 | Frontend (static) | every module free of `innerHTML`/`eval`/`document.write`/`localStorage`; relative imports resolve; no inline scripts, styles or handlers; Leaflet SRI intact; fonts self-hosted with OFL licences |
+| GeoServer DB role | `geoserver_ro` is unprivileged, reads only `public_places` public columns, is denied on every private table, read-only, single grant |
 | Docs | `/docs` and `/openapi.json` return 404 in production |
 
 **CI** (`.github/workflows/ci.yml`, on every push and PR) runs ruff, the test suite,
@@ -240,6 +246,7 @@ docs/           data sources, authentication design, privacy (location precision
 frontend/       the hall UI: index.html, styles.css, icons.svg, js/ (api, dom, map, views/*), vendored Leaflet + fonts
 tests/          unit + integration tests (real PostGIS)
 compose.test.yml  isolated test stack (separate compose project)
+geoserver/      REST bootstrap and verification scripts for the GeoServer profile
 .github/        CI workflow and Dependabot configuration
 ```
 

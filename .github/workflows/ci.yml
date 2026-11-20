@@ -45,6 +45,7 @@ jobs:
             echo "POSTGRES_PASSWORD=$(openssl rand -hex 24)"
             echo "GEOVAULT_DB_PASSWORD=$(openssl rand -hex 24)"
             echo "GEOVAULT_JWT_SECRET=$(openssl rand -hex 32)"
+            echo "GEOVAULT_GEOSERVER_DB_PASSWORD=$(openssl rand -hex 24)"
           } > .env
       - name: Run test suite (API, DB constraints, import integrity, static frontend checks)
         run: docker compose -f compose.test.yml run --rm --build test

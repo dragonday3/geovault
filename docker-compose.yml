@@ -9,9 +9,11 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
       GEOVAULT_DB_PASSWORD: ${GEOVAULT_DB_PASSWORD:?set GEOVAULT_DB_PASSWORD in .env}
+      GEOVAULT_GEOSERVER_DB_PASSWORD: ${GEOVAULT_GEOSERVER_DB_PASSWORD:?set GEOVAULT_GEOSERVER_DB_PASSWORD in .env}
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./db/init/20_app_role.sh:/docker-entrypoint-initdb.d/20_app_role.sh:ro
+      - ./db/init/30_geoserver_role.sh:/docker-entrypoint-initdb.d/30_geoserver_role.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d geovault"]
       interval: 5s
@@ -44,9 +46,38 @@ services:
     security_opt: ["no-new-privileges:true"]
     networks: [backend]
 
+  # --- GeoServer (opt-in: `docker compose --profile geoserver up -d`) ----------------------
+  # Publishes ONLY the public places view over WMS/WFS. Reads the DB as geoserver_ro, which
+  # can select from public_places and nothing else. ~1.5 GB RAM, hence opt-in.
+  # Never run `docker compose --profile geoserver down -v`: -v deletes the dev DB volume too.
+  geoserver:
+    profiles: [geoserver]
+    image: docker.osgeo.org/geoserver:2.28.0@sha256:7b85fe2fd5e6143c93fc2dc71db0a7f07dc966697da78050d327bfef1e05fa2b
+    environment:
+      GEOSERVER_ADMIN_USER: ${GEOSERVER_ADMIN_USER:-gvadmin}
+      # Mandatory: without it the image falls back to the well-known admin/geoserver.
+      GEOSERVER_ADMIN_PASSWORD: ${GEOSERVER_ADMIN_PASSWORD:?set GEOSERVER_ADMIN_PASSWORD in .env}
+      SKIP_DEMO_DATA: "true"
+      RUN_UNPRIVILEGED: "true"
+      ROOT_WEBAPP_REDIRECT: "true"
+      CORS_ENABLED: "false"
+    ports:
+      - "127.0.0.1:${GEOVAULT_GEOSERVER_PORT:-8080}:8080"
+    volumes:
+      - geoserver-data:/opt/geoserver_data
+    depends_on:
+      db:
+        condition: service_healthy
+    # Starts as root only to fix data-dir ownership, then drops to uid 999 (RUN_UNPRIVILEGED).
+    cap_drop: [ALL]
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETUID, SETGID]
+    security_opt: ["no-new-privileges:true"]
+    networks: [backend]
+
 networks:
   backend:
 
 volumes:
   pgdata:
   photos:
+  geoserver-data:
