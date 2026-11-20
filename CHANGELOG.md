@@ -4,6 +4,24 @@ All notable changes to GeoVault. Format: [Keep a Changelog](https://keepachangel
 
 ## [Unreleased]
 
+### Added — Milestone 10: the full interface (2026-11-21)
+- New visual world, the "safe-deposit hall": vault-green enamel rail and header, steel map, brass
+  reserved for number plates, the primary action and focus, engraved condensed-caps plates,
+  self-hosted Archivo (wght+wdth) and JetBrains Mono (OFL), and an authored SVG icon sprite.
+- Vanilla-JS ES-module app with a hash router: Hall (search, category plates, nearby, Bhuvan
+  link-out), sign-in and registration, My vault (numbered boxes, deposit by map click or from a
+  public place), box detail (owner truth, the cloak lens, photo, keys, visibility, delete),
+  Keys (shared with me), public share-link view, Account (profile, export, delete), and
+  Register (admin users/roles and access register).
+- `GET /api/favourites/{id}/cloak-preview` (owner only): the server-computed cell and point
+  that recipients get at each precision, drawn by the cloak lens.
+- Security: access token in memory only, silent refresh with CSRF header, share tokens in the URL
+  fragment, textContent-only rendering, CSP-compatible (no inline code); CSP `img-src` gains
+  `blob:` for photos fetched with auth.
+- Static tests now cover every frontend module (DOM sinks, storage, import resolution, inline
+  styles, font licences); 283 tests in total.
+- `PRODUCT.md`, `DESIGN.md` and UI screenshots in `docs/images/`.
+
 ### Added — Ahmedabad region (2026-11-20)
 - Migration `0009_region_ahmedabad` (UTM 43N cloaking CRS, city-zoom clamp) and an OpenStreetMap
   snapshot of 375 public places. Overpass selectors are shared across Indian cities.

@@ -14,7 +14,7 @@ CSP = "; ".join(
         "default-src 'self'",
         "script-src 'self'",
         "style-src 'self'",
-        f"img-src 'self' data: {OSM_TILES}",
+        f"img-src 'self' data: blob: {OSM_TILES}",  # blob: = photos fetched with auth
         "connect-src 'self'",
         "font-src 'self'",
         "object-src 'none'",

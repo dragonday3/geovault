@@ -149,3 +149,37 @@ def list_public(conn: Connection, region: str | None, limit: int, offset: int) -
         """,
         {"region": region, "limit": limit, "offset": offset},
     ).fetchall()
+
+
+def cloak_preview(conn: Connection, favourite_id: uuid.UUID, owner_id: uuid.UUID) -> list[dict]:
+    """OWNER ONLY: what non-owners would see at each precision, plus the grid cell itself.
+
+    Uses the same cloak_point() and the same grid arithmetic in the region's metric CRS, so
+    the UI can show the owner exactly the cell a share recipient gets, not an approximation.
+    """
+    rows = conn.execute(
+        """
+        SELECT c.cell AS precision_m,
+               ST_Y(cloak_point(f.geom, r.local_srid, c.cell)) AS lat,
+               ST_X(cloak_point(f.geom, r.local_srid, c.cell)) AS lon,
+               ST_AsGeoJSON(ST_Transform(ST_MakeEnvelope(
+                   floor(ST_X(p.t) / c.cell) * c.cell, floor(ST_Y(p.t) / c.cell) * c.cell,
+                   floor(ST_X(p.t) / c.cell) * c.cell + c.cell, floor(ST_Y(p.t) / c.cell) * c.cell + c.cell,
+                   r.local_srid), 4326))::json -> 'coordinates' -> 0 AS ring
+        FROM favourites f
+        JOIN regions r ON r.code = f.region
+        CROSS JOIN LATERAL (SELECT ST_Transform(f.geom, r.local_srid) AS t) p
+        CROSS JOIN (VALUES (100), (500), (1000)) AS c(cell)
+        WHERE f.id = %s AND f.owner_id = %s
+        ORDER BY c.cell
+        """,
+        (favourite_id, owner_id),
+    ).fetchall()
+    return [
+        {
+            "precision_m": r["precision_m"],
+            "location": {"lat": round(r["lat"], 6), "lon": round(r["lon"], 6)},  # as shared views round
+            "cell": [[round(x, 7), round(y, 7)] for x, y in r["ring"]],
+        }
+        for r in rows
+    ]

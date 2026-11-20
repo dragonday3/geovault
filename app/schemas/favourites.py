@@ -167,3 +167,11 @@ class ShareOut(BaseModel):
     # Only present in the creation response: the raw link token is never stored or shown again.
     token: str | None = None
     path: str | None = None
+
+
+class CloakPreviewOut(BaseModel):
+    """Owner-only preview of the cloaked view at one precision."""
+
+    precision_m: Precision
+    location: LatLon
+    cell: list[tuple[float, float]]  # polygon ring as [lon, lat] pairs (GeoJSON order)

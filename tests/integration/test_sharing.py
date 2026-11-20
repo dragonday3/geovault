@@ -295,3 +295,35 @@ def test_expiry_is_reported(client):
     share = share_link(client, owner, create(client, owner), hours=2)
     expires = datetime.fromisoformat(share["expires_at"].replace("Z", "+00:00"))
     assert 7000 < (expires - datetime.now(UTC)).total_seconds() <= 7200
+
+
+# --- owner cloak preview -----------------------------------------------------------------------
+
+
+def _inside(point, ring) -> bool:
+    xs, ys = [x for x, _ in ring], [y for _, y in ring]
+    return min(xs) <= point["lon"] <= max(xs) and min(ys) <= point["lat"] <= max(ys)
+
+
+def test_cloak_preview_matches_what_recipients_actually_get(client):
+    owner = make_user(client)
+    fav = create(client, owner, share_precision_m=500)
+    preview = client.get(f"/api/favourites/{fav['id']}/cloak-preview", headers=owner["headers"])
+    assert preview.status_code == 200
+    by_precision = {p["precision_m"]: p for p in preview.json()}
+    assert set(by_precision) == {100, 500, 1000}
+
+    shared = client.get(share_link(client, owner, fav)["path"]).json()["location"]
+    assert by_precision[500]["location"] == {"lat": shared["lat"], "lon": shared["lon"]}
+    for p in by_precision.values():
+        assert _inside(p["location"], p["cell"])  # the drawn cell contains the cloaked point
+        assert _inside(EXACT, p["cell"])  # ...and the true point: it IS that point's cell
+
+
+def test_cloak_preview_is_owner_only(client):
+    owner, other = make_user(client), make_user(client)
+    fav = create(client, owner)
+    assert (
+        client.get(f"/api/favourites/{fav['id']}/cloak-preview", headers=other["headers"]).status_code == 404
+    )
+    assert client.get(f"/api/favourites/{fav['id']}/cloak-preview").status_code == 401

@@ -1,0 +1,172 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-21T00:00:00Z",
+  "title": "Design System: GeoVault",
+  "extensions": {
+    "colorMeta": {
+      "brass-400": { "role": "primary", "displayName": "Plate Brass", "canonical": "#c9a050", "tonalRamp": ["#4a3712", "#7a5c22", "#b08a3e", "#c9a050", "#dcb86c", "#ecd49c"] },
+      "oxide-500": { "role": "tertiary", "displayName": "Oxide Red", "canonical": "#a8322c", "tonalRamp": ["#6a2a26", "#7d221e", "#a8322c", "#e7978f", "#ffd3cd"] },
+      "oxide-rule": { "role": "tertiary", "displayName": "Oxide Rule", "canonical": "#6a2a26" },
+      "vault-800": { "role": "neutral", "displayName": "Vault Enamel", "canonical": "#16352c", "tonalRamp": ["#0b1f1a", "#10291f", "#16352c", "#1d4337", "#234d40", "#2b5a4b", "#3a6b5b"] },
+      "vault-rule": { "role": "neutral", "displayName": "Enamel Rule", "canonical": "#3a6b5b" },
+      "on-vault": { "role": "neutral", "displayName": "Enamel Text", "canonical": "#eaf1ec", "tonalRamp": ["#8fad9f", "#b3c9be", "#eaf1ec"] },
+      "steel-50": { "role": "neutral", "displayName": "Brushed Steel", "canonical": "#f0f2f2", "tonalRamp": ["#444e52", "#6b767a", "#aab3b5", "#cdd3d4", "#e3e7e7", "#f0f2f2", "#f7f8f8"] },
+      "ink": { "role": "neutral", "displayName": "Ledger Ink", "canonical": "#111617", "tonalRamp": ["#111617", "#3c4649"] }
+    },
+    "typographyMeta": {
+      "headline": { "displayName": "Headline", "purpose": "Box label on an opened box." },
+      "title": { "displayName": "Title", "purpose": "Rail view titles and share card titles; 18px for place cards and dialogs." },
+      "body": { "displayName": "Body", "purpose": "Running text, tabular figures at root." },
+      "row-title": { "displayName": "Row title", "purpose": "List rows and key tags, single line with ellipsis." },
+      "label": { "displayName": "Engraved label", "purpose": "Section titles, field labels, tabs, ledger headers; uppercase condensed caps." },
+      "plate": { "displayName": "Plate", "purpose": "Engraved plates: box numbers, visibility, categories, city codes. Uppercase, 70% width." },
+      "mono": { "displayName": "Mono", "purpose": "Coordinates, expiry stamps, counts, register action codes." }
+    },
+    "shadows": [],
+    "elevation": [
+      { "name": "floating-layer", "value": "background: var(--vault-950); border: 1px solid var(--vault-rule)", "purpose": "Toasts, tooltips, map banner (brass-500 edge). Edge and colour, never soft shadow." },
+      { "name": "active-marker", "value": "outline: 2px solid var(--brass-500); outline-offset: 2px", "purpose": "Active box marker on the map." },
+      { "name": "dialog-backdrop", "value": "rgb(11 31 26 / 0.62)", "purpose": "Modal backdrop wash." },
+      { "name": "plate-inset-rule", "value": "::after { inset: 2px; border: 1px solid rgb(220 184 108 / 0.28) }", "purpose": "The engraved double rule on plates." },
+      { "name": "focus", "value": "outline: 2px solid var(--brass-300); outline-offset: 2px", "purpose": "Global focus-visible ring." }
+    ],
+    "motion": [
+      { "name": "ease-out", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "All CSS transitions and keyframes." },
+      { "name": "t-fast", "value": "140ms", "purpose": "Hover and state colour changes." },
+      { "name": "t-med", "value": "260ms", "purpose": "Drawer slide (10px on x) and toast rise (8px on y)." },
+      { "name": "press", "value": "transform: translateY(1px) over 80ms", "purpose": "Button active press." },
+      { "name": "cloak-tween", "value": "600ms, ease 1 - 2^(-10t)", "purpose": "Box plate sliding from the true spot to the cloak cell centre; jumps under reduced motion." },
+      { "name": "reduced-motion", "value": "animation and transition durations forced to 1ms", "purpose": "prefers-reduced-motion: reduce." }
+    ],
+    "breakpoints": [
+      { "name": "compact-rail", "value": "1100px", "purpose": "Rail narrows to 360px; city names hide." },
+      { "name": "mobile", "value": "760px", "purpose": "Map on top at 52dvh, rail becomes a scrolling sheet with sticky tabs." }
+    ],
+    "layout": [
+      { "name": "topbar-h", "value": "56px" },
+      { "name": "rail-w", "value": "400px" },
+      { "name": "marker-stack-step", "value": "24px", "purpose": "Colliding box plates stack upward, up to six steps." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Brass Button",
+      "kind": "button",
+      "refersTo": "button-brass",
+      "description": "The primary action. One per view.",
+      "html": "<div class=\"ds-enamel\"><button class=\"ds-btn-brass\">Deposit a place</button></div>",
+      "css": ".ds-enamel { background: #16352c; padding: 16px; } .ds-btn-brass { display: inline-flex; align-items: center; gap: 8px; min-height: 38px; padding: 0 14px; border-radius: 2px; background: #c9a050; color: #0b1f1a; border: 1px solid #dcb86c; font-family: var(--font-ui); font-weight: 620; font-size: 14px; letter-spacing: 0.01em; cursor: pointer; transition: background-color 140ms cubic-bezier(0.16,1,0.3,1), transform 80ms cubic-bezier(0.16,1,0.3,1); } .ds-btn-brass:hover { background: #dcb86c; } .ds-btn-brass:active { transform: translateY(1px); } .ds-btn-brass:focus-visible { outline: 2px solid #dcb86c; outline-offset: 2px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary action on the enamel.",
+      "html": "<div class=\"ds-enamel\"><button class=\"ds-btn-ghost\">Copy link</button></div>",
+      "css": ".ds-enamel { background: #16352c; padding: 16px; } .ds-btn-ghost { min-height: 38px; padding: 0 14px; border-radius: 2px; background: transparent; color: #eaf1ec; border: 1px solid #3a6b5b; font-weight: 620; font-size: 14px; cursor: pointer; transition: background-color 140ms cubic-bezier(0.16,1,0.3,1); } .ds-btn-ghost:hover { background: #1d4337; border-color: #8fad9f; } .ds-btn-ghost:active { transform: translateY(1px); } .ds-btn-ghost:focus-visible { outline: 2px solid #dcb86c; outline-offset: 2px; }"
+    },
+    {
+      "name": "Danger Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Destructive actions: revoke, delete. Oxide only.",
+      "html": "<div class=\"ds-enamel\"><button class=\"ds-btn-danger\">Revoke key</button></div>",
+      "css": ".ds-enamel { background: #16352c; padding: 16px; } .ds-btn-danger { min-height: 38px; padding: 0 14px; border-radius: 2px; background: transparent; color: #e7978f; border: 1px solid #6a2a26; font-weight: 620; font-size: 14px; cursor: pointer; transition: background-color 140ms cubic-bezier(0.16,1,0.3,1); } .ds-btn-danger:hover { background: #7d221e; color: #fff; border-color: #a8322c; } .ds-btn-danger:active { transform: translateY(1px); } .ds-btn-danger:focus-visible { outline: 2px solid #dcb86c; outline-offset: 2px; }"
+    },
+    {
+      "name": "Engraved Plates",
+      "kind": "custom",
+      "refersTo": "plate",
+      "description": "Condensed caps with a 1px inset double rule: solid box number, brass, steel and oxide variants.",
+      "html": "<div class=\"ds-plates\"><span class=\"ds-plate ds-plate-solid ds-plate-lg\">Box 005</span><span class=\"ds-plate\">Shared</span><span class=\"ds-plate ds-plate-steel\">Cafe</span><span class=\"ds-plate ds-plate-oxide\">Revoked</span></div>",
+      "css": ".ds-plates { display: flex; gap: 8px; align-items: center; background: #16352c; padding: 16px; } .ds-plate { position: relative; display: inline-flex; padding: 3px 8px 2px; font-family: var(--font-ui); font-weight: 740; font-stretch: 70%; letter-spacing: 0.13em; text-transform: uppercase; font-size: 12px; line-height: 1.35; color: #dcb86c; border: 1px solid #b08a3e; border-radius: 1px; } .ds-plate::after { content: \"\"; position: absolute; inset: 2px; border: 1px solid rgb(220 184 108 / 0.28); } .ds-plate-solid { background: #c9a050; color: #0b1f1a; border-color: #dcb86c; } .ds-plate-solid::after { border-color: rgb(16 41 31 / 0.25); } .ds-plate-steel { color: #b3c9be; border-color: #3a6b5b; } .ds-plate-steel::after { border-color: rgb(179 201 190 / 0.16); } .ds-plate-oxide { color: #e7978f; border-color: #6a2a26; } .ds-plate-oxide::after { border-color: rgb(231 151 143 / 0.2); } .ds-plate-lg { font-size: 15px; padding: 6px 12px 5px; letter-spacing: 0.16em; }"
+    },
+    {
+      "name": "Segmented Control",
+      "kind": "chip",
+      "refersTo": "segment-selected",
+      "description": "Joined cells for visibility, precision and lens view. Selected is the enamel state, not brass.",
+      "html": "<div class=\"ds-wrap\"><div class=\"ds-seg\"><button aria-pressed=\"false\">100 m</button><button aria-pressed=\"true\">500 m</button><button aria-pressed=\"false\">1 km</button></div></div>",
+      "css": ".ds-wrap { background: #10291f; padding: 16px; } .ds-seg { display: flex; border: 1px solid #3a6b5b; border-radius: 2px; overflow: hidden; } .ds-seg button { flex: 1 1 0; min-height: 36px; border: 0; border-right: 1px solid #3a6b5b; background: transparent; color: #b3c9be; font-weight: 650; font-size: 13px; cursor: pointer; transition: background-color 140ms cubic-bezier(0.16,1,0.3,1); } .ds-seg button:last-child { border-right: 0; } .ds-seg button:hover { background: #1d4337; color: #eaf1ec; } .ds-seg button[aria-pressed=\"true\"] { background: #eaf1ec; color: #10291f; } .ds-seg button:focus-visible { outline: 2px solid #dcb86c; outline-offset: -2px; }"
+    },
+    {
+      "name": "Category Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Hall category filters with a mono count; selected uses the enamel state.",
+      "html": "<div class=\"ds-chips\"><button class=\"ds-chip\" aria-pressed=\"true\">Cafe <span class=\"ds-count\">42</span></button><button class=\"ds-chip\" aria-pressed=\"false\">Park <span class=\"ds-count\">18</span></button></div>",
+      "css": ".ds-chips { display: flex; gap: 6px; background: #16352c; padding: 16px; } .ds-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 10px; background: transparent; border: 1px solid #3a6b5b; border-radius: 2px; color: #b3c9be; font-size: 12.5px; font-weight: 560; cursor: pointer; } .ds-chip:hover { border-color: #8fad9f; color: #eaf1ec; } .ds-chip[aria-pressed=\"true\"] { background: #eaf1ec; color: #10291f; border-color: #eaf1ec; } .ds-chip:focus-visible { outline: 2px solid #dcb86c; outline-offset: 2px; } .ds-count { font-family: var(--font-mono); font-size: 11.5px; opacity: 0.75; }"
+    },
+    {
+      "name": "Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Condensed-caps label over an enamel input; focus turns the edge brass.",
+      "html": "<label class=\"ds-field\"><span>Label</span><input class=\"ds-input\" placeholder=\"Home\"></label>",
+      "css": ".ds-field { display: grid; gap: 6px; background: #16352c; padding: 16px; } .ds-field > span { font-size: 12px; font-weight: 700; font-stretch: 78%; letter-spacing: 0.12em; text-transform: uppercase; color: #b3c9be; } .ds-input { min-height: 40px; padding: 8px 11px; background: #10291f; color: #eaf1ec; border: 1px solid #3a6b5b; border-radius: 2px; caret-color: #b08a3e; transition: border-color 140ms cubic-bezier(0.16,1,0.3,1); } .ds-input:hover { border-color: #8fad9f; } .ds-input:focus { outline: none; border-color: #dcb86c; background: #0b1f1a; }"
+    },
+    {
+      "name": "Rail Tabs",
+      "kind": "nav",
+      "refersTo": "rail-tab",
+      "description": "Drawer rail navigation in condensed caps; current page in brass with a 2px underline.",
+      "html": "<nav class=\"ds-tabs\"><a href=\"#\">Hall</a><a href=\"#\" aria-current=\"page\">My vault</a><a href=\"#\">Keys</a><a href=\"#\">Register</a></nav>",
+      "css": ".ds-tabs { display: flex; background: #10291f; border-bottom: 1px solid #3a6b5b; } .ds-tabs a { flex: 1 1 0; display: flex; align-items: center; justify-content: center; min-height: 48px; color: #8fad9f; text-decoration: none; font-weight: 700; font-stretch: 74%; letter-spacing: 0.12em; text-transform: uppercase; font-size: 12.5px; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 140ms cubic-bezier(0.16,1,0.3,1); } .ds-tabs a:hover { color: #eaf1ec; } .ds-tabs a[aria-current=\"page\"] { color: #dcb86c; border-bottom-color: #dcb86c; } .ds-tabs a:focus-visible { outline: 2px solid #dcb86c; outline-offset: -2px; }"
+    },
+    {
+      "name": "Key Tag",
+      "kind": "card",
+      "refersTo": "key-tag",
+      "description": "A share key: punched hole, title, meta and a mono expiry stamp; dead keys fade with oxide.",
+      "html": "<div class=\"ds-keys\"><div class=\"ds-key\"><span class=\"ds-hole\"></span><span><b>Box 005 to Priya</b><small>500 m precision</small></span><span class=\"ds-stamp\">EXP 22 NOV</span></div><div class=\"ds-key is-dead\"><span class=\"ds-hole\"></span><span><b>Link, Box 002</b><small>revoked</small></span><span class=\"ds-stamp\">REVOKED</span></div></div>",
+      "css": ".ds-keys { background: #16352c; padding: 16px; } .ds-key { display: grid; grid-template-columns: 14px minmax(0,1fr) auto; align-items: center; gap: 12px; padding: 10px 10px 10px 12px; margin-bottom: 8px; background: #10291f; border: 1px solid #3a6b5b; border-radius: 2px; color: #eaf1ec; } .ds-key b { display: block; font-weight: 600; font-size: 14px; } .ds-key small { display: block; font-size: 12.5px; color: #b3c9be; } .ds-hole { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid #c9a050; background: #16352c; } .ds-stamp { font-family: var(--font-mono); font-size: 11.5px; color: #dcb86c; } .ds-key.is-dead { opacity: 0.62; } .ds-key.is-dead .ds-hole { border-color: #e7978f; } .ds-key.is-dead .ds-stamp { color: #e7978f; }"
+    },
+    {
+      "name": "Box Markers",
+      "kind": "custom",
+      "refersTo": "box-marker",
+      "description": "Brass map plates with mono numbers; active outlined, cloaked inverted.",
+      "html": "<div class=\"ds-steel\"><div class=\"ds-marker\">005</div><div class=\"ds-marker is-active\">002</div><div class=\"ds-marker is-cloaked\">005</div></div>",
+      "css": ".ds-steel { display: flex; gap: 12px; background: #e3e7e7; padding: 16px; } .ds-marker { display: grid; place-items: center; width: 26px; height: 22px; background: #c9a050; color: #0b1f1a; border: 1.5px solid #0b1f1a; font-family: var(--font-mono); font-size: 10px; font-weight: 700; border-radius: 1px; } .ds-marker.is-active { background: #ecd49c; outline: 2px solid #b08a3e; outline-offset: 2px; } .ds-marker.is-cloaked { background: #16352c; color: #ecd49c; border-color: #dcb86c; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Safe-Deposit Hall",
+    "overview": "GeoVault is a bank's deposit hall rendered as an interface. The city map is the public hall floor, the user's places are numbered private boxes, a share is a key tag with a stamped expiry, and the audit log is the access register. Vault-green enamel owns the frame at region scale (the 56px header and the 400px drawer rail); brushed-steel neutrals carry the map frame and the light panels that hold owner truth; brass is the engraved metal, used sparingly so every brass object reads as a plate or a handle.\n\nThe surface is dense and ruled rather than airy: rows sit on 1px rules, register tables are ruled ledgers, labels are condensed engraved caps, and figures are tabular everywhere. Depth comes from enamel versus steel versus brass, and from edges, never from soft shadow. The world rejects both category defaults: the white sidebar with a blue-accent list over a map, and the dark neon security dashboard.\n\nThe signature is the cloak lens: in box detail, switching Owner view to Shared view slides the brass box plate from the true spot into the centre of a dashed brass grid cell. Privacy is shown as a physical move, not described.",
+    "keyCharacteristics": [
+      "Enamel frame, steel map, brass plates, ledger ink, oxide red only for loss.",
+      "Engraved plates: condensed caps, tabular figures, a 1px inset double rule.",
+      "Coordinates and stamps in a monospaced face.",
+      "Corners at 2px or less; no soft shadows anywhere.",
+      "One-axis motion with a single exponential ease-out; reduced motion honoured.",
+      "Self-hosted everything under a strict CSP; DOM text set via textContent only."
+    ],
+    "rules": [
+      { "name": "The Brass Reservation Rule", "body": "Brass is reserved for number plates, the primary action, the city plates and focus (plus the map objects that are plates: box markers and the cloak cell). Selected segments and selected chips use the enamel state: on-vault fill with vault-900 ink, never brass.", "section": "colors" },
+      { "name": "The Oxide Means Loss Rule", "body": "Oxide red marks revoked or expired states and destructive actions only. It is never decoration and never a generic accent.", "section": "colors" },
+      { "name": "The Grey Hall Rule", "body": "Map tiles are desaturated (grayscale 0.88) so brass boxes and green public places carry the colour on the map.", "section": "colors" },
+      { "name": "The Tabular Everywhere Rule", "body": "The root sets tabular numerals; every figure in the product lines up.", "section": "typography" },
+      { "name": "The Engraving Rule", "body": "Condensed caps come from Archivo's width axis, not a second family, and appear only on plates, tabs and labels that name a section or field.", "section": "typography" },
+      { "name": "The Stacked Plates Rule", "body": "Box plates that collide on the map stack upward in 24px steps (up to six steps), so no box is ever hidden under another.", "section": "layout" },
+      { "name": "The Edge Not Shadow Rule", "body": "If a layer needs to lift, give it a darker enamel fill and a 1px rule; an active box marker takes a 2px brass outline at 2px offset.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep brass on plates, the primary action, the selected city plate, map plates, the cloak cell and focus only.",
+      "Do show selected segments and chips in the enamel state (on-vault fill, vault-900 ink).",
+      "Do separate floating layers with a darker fill and a 1px rule.",
+      "Do set every coordinate, stamp, count and register code in JetBrains Mono with tabular figures.",
+      "Do build engraved labels from Archivo's width axis (68 to 80%) in uppercase with 0.12 to 0.16em tracking.",
+      "Do run motion on one axis with the 0.16, 1, 0.3, 1 ease-out (140ms for state, 260ms for drawers and toasts, 600ms for the cloak tween), and honour reduced motion.",
+      "Do stack colliding box plates upward in 24px steps.",
+      "Do use icons from the authored sprite (frontend/icons.svg) and self-hosted fonts only; write API data with textContent only."
+    ],
+    "donts": [
+      "Don't use soft shadows on anything, including map controls and tooltips.",
+      "Don't use brass for selected states, generic highlights or decoration.",
+      "Don't use oxide red for anything other than revoked or expired states, destructive actions and errors.",
+      "Don't round corners past 2px or use pill shapes; circles are only for literal holes, dots and the spinner.",
+      "Don't build the white-sidebar-with-blue-accent map layout or a dark neon security dashboard.",
+      "Don't load fonts, scripts, styles or images from third-party origins (OSM tiles excepted), and don't use inline style or script."
+    ]
+  }
+}

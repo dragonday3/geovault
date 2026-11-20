@@ -7,10 +7,34 @@ A multi-region geospatial web application built on public open data for **Melbou
 attack a deliberately vulnerable **local lab** instance, remediate, and prove the fixes with
 regression tests.
 
-> **Status: Milestone 9 — HTTP hardening and logging.** Public places API + map over ~2,900 real places.
+> **Status: Milestone 10 — the full interface.** Public places API + map over ~2,900 real places.
 > Authentication, favourites,
 > sharing, lab mode, GeoServer and CI arrive in later milestones (see `CHANGELOG.md`).
 > Only features listed under *What works now* are implemented.
+
+## Interface
+
+GeoVault's interface is a **safe-deposit hall**. The city map is the public hall. Your places
+are numbered private boxes. A share is a key with a stamped expiry, and the audit trail is the
+access register. The signature interaction is the **cloak lens**: switch a box to *Shared
+view* and its plate slides from your exact spot into the server-computed grid cell, which is
+the only location anyone you share with ever receives.
+
+| | |
+|---|---|
+| ![Cloak lens: the box snaps into its 500 m grid cell; the true spot is drawn only for the owner](docs/images/ui-box-shared.webp) | ![Bengaluru public hall with 1,995 open-data places](docs/images/ui-desktop.webp) |
+| *Cloak lens (Shared view): recipients see the cell centre, 217 m from the true spot* | *Public hall: open data, category plates, city-clamped map* |
+| ![My vault: numbered boxes in two cities](docs/images/ui-vault.webp) | ![Access register: every security event, admin-only](docs/images/ui-register.webp) |
+| *My vault: numbered boxes, capacity printed on the furniture* | *Access register (admin): secret-free audit trail* |
+| ![Photo rebuilt from pixels: no GPS or camera metadata survives](docs/images/ui-box-photo.webp) | ![Public share link on a phone: cloaked cell only](docs/images/ui-share-mobile.webp) |
+| *Photo stored metadata-free (demo photo: Gpkp, CC BY-SA 4.0, via Wikimedia Commons)* | *Anyone with a link sees a 500 m cell, never the exact spot* |
+
+Built in vanilla JS (ES modules) with vendored Leaflet and self-hosted Archivo and JetBrains
+Mono (SIL OFL), under the strict CSP: no inline script or style, no third-party origins
+except OSM tiles. API data reaches the page only through `textContent`. The access token lives
+only in module memory, never in `localStorage`. Share links put the token in the URL
+**fragment** (`/#/share/<token>`), which browsers never send to the server. Design system:
+[DESIGN.md](DESIGN.md). Product brief: [PRODUCT.md](PRODUCT.md).
 
 ## What works now
 
@@ -34,6 +58,7 @@ regression tests.
 | `DELETE /api/users/me` | Delete your account (password re-entry required): content erased, identity anonymised |
 | `GET/POST /api/favourites` | List your favourites / save one (by `location` or public `place_id`; region derived server-side) |
 | `GET/PATCH/DELETE /api/favourites/{id}` | Owner only: exact location and private note. Anyone else gets 404 |
+| `GET /api/favourites/{id}/cloak-preview` | Owner only: the exact point and grid cell recipients would get at 100 m / 500 m / 1 km (powers the cloak lens) |
 | `GET /api/favourites/public` | Favourites marked public: cloaked location and display name only |
 | `POST /api/favourites/{id}/share` | Share with a registered user (`{"type":"user","email":...}`) or create an expiring link (`{"type":"link","expires_in_hours":72}`) |
 | `GET /api/favourites/{id}/shares`, `DELETE .../shares/{share_id}` | List / revoke shares |
@@ -95,7 +120,7 @@ docker compose exec api python -m app.manage promote-admin you@example.com
 ## Testing
 
 ```powershell
-docker compose -f compose.test.yml run --rm --build test   # 257 tests, ~45 s after the image is built
+docker compose -f compose.test.yml run --rm --build test   # 283 tests, ~45 s after the image is built
 docker compose -f compose.test.yml down -v                 # remove the throwaway test database
 ```
 
@@ -123,6 +148,7 @@ database host other than the dedicated test instance.
 | Admin (API5) | anonymous → 401 and ordinary user → 403 on every admin route; router-level guard asserted; role change is immediate and audited; no self role change; audit view filtered and self-audited |
 | Hardening (API8) | CSP (no `unsafe-inline`/`eval`, `frame-ancestors 'none'`), nosniff, X-Frame-Options, Referrer/Permissions/COOP/CORP on every response incl. 404/401/500; route CSP preserved; relaxed CSP only on local `/docs`; HSTS only in production; no CORS for foreign origins; no server banner |
 | Errors and logging | unhandled exceptions → generic JSON 500 with request ID, no traceback; request IDs validated; JSON logs redact JWTs, bearer tokens, passwords, emails, DSNs, share tokens and coordinates; access log has no query strings; full user journey leaves no secrets in logs |
+| Frontend (static) | every module free of `innerHTML`/`eval`/`document.write`/`localStorage`; relative imports resolve; no inline scripts, styles or handlers; Leaflet SRI intact; fonts self-hosted with OFL licences |
 | Docs | `/docs` and `/openapi.json` return 404 in production |
 
 **CI** (`.github/workflows/ci.yml`, on every push and PR) runs ruff, the test suite,
@@ -211,7 +237,7 @@ db/init/        one-time database bootstrap (least-privilege app role)
 db/migrations/  numbered SQL migrations, applied automatically at API start-up
 data/           dataset catalogue (sources.py), fetcher, importer, raw snapshots, test seeds
 docs/           data sources, authentication design, privacy (location precision, photos)
-frontend/       static map UI (vanilla JS + vendored Leaflet)
+frontend/       the hall UI: index.html, styles.css, icons.svg, js/ (api, dom, map, views/*), vendored Leaflet + fonts
 tests/          unit + integration tests (real PostGIS)
 compose.test.yml  isolated test stack (separate compose project)
 .github/        CI workflow and Dependabot configuration
@@ -223,5 +249,6 @@ Security testing in this project targets **only** GeoVault instances owned by th
 localhost or the developer's own AWS account. No City of Melbourne, Government of India / data.gov.in,
 ISRO Bhuvan, OpenStreetMap or other third-party infrastructure is ever scanned or tested.
 
-Map tiles and Bengaluru/Ahmedabad place data © OpenStreetMap contributors (ODbL). Melbourne place data
+Fonts: Archivo (Omnibus-Type) and JetBrains Mono, SIL Open Font License 1.1 (licences in
+`frontend/vendor/fonts/`). Map tiles and Bengaluru/Ahmedabad place data © OpenStreetMap contributors (ODbL). Melbourne place data
 © City of Melbourne (CC BY 4.0).

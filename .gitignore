@@ -34,3 +34,9 @@ graphify-out/
 
 # Internal planning notes (contain local machine details)
 docs/phase-0-plan.md
+
+# Impeccable working files (review captures, decision-page logs, build state)
+.impeccable/review/
+.impeccable/questions/
+.impeccable/mocks/
+.impeccable/build/

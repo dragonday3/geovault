@@ -21,6 +21,7 @@ from app.deps import (
     photo_response,
 )
 from app.schemas.favourites import (
+    CloakPreviewOut,
     FavouriteCreateIn,
     FavouriteOut,
     FavouriteUpdateIn,
@@ -71,6 +72,12 @@ def create_favourite(body: FavouriteCreateIn, user: AuthUser, conn: Conn, reques
 @router.get("/{favourite_id}", response_model=FavouriteOut)
 def get_favourite(fav: OwnedFav, conn: Conn):
     return favs.to_owner_out(favs.get(conn, fav.id, fav.owner_id))
+
+
+@router.get("/{favourite_id}/cloak-preview", response_model=list[CloakPreviewOut])
+def cloak_preview(fav: OwnedFav, conn: Conn):
+    """What share recipients and the public list would see at 100 m, 500 m and 1 km."""
+    return favs.cloak_preview(conn, fav.id, fav.owner_id)
 
 
 @router.patch("/{favourite_id}", response_model=FavouriteOut)
