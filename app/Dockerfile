@@ -2,7 +2,7 @@
 # Build context is the repository root (see docker-compose.yml).
 # Stages: base (runtime deps) -> test (adds pytest + tests) | runtime (final, default target).
 
-FROM python@sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b AS base
+FROM python@sha256:46837ed3105db0029b6d656816185c6258e3b39690532fb782428e0a5fd76182 AS base
 # ^ python:3.12-slim, pinned by digest so builds are reproducible; Dependabot bumps it.
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
