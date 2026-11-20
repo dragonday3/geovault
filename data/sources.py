@@ -140,10 +140,9 @@ _COM = {
 
 # --- OpenStreetMap: Bengaluru ---------------------------------------------------------------
 
-# One polite Overpass query, run once to produce a committed snapshot (fetch_sources.py).
-# Bounding box matches regions.bounds for 'bengaluru' (south, west, north, east).
-OSM_BENGALURU_QUERY = """
-[out:json][timeout:180][bbox:12.75,77.35,13.20,77.90];
+# One polite Overpass query per city, run once to produce a committed snapshot
+# (fetch_sources.py). Point-of-interest selectors are shared by every Indian city.
+_OSM_POI_SELECTORS = """
 (
   nwr["leisure"="park"]["name"];
   nwr["leisure"="garden"]["name"]["access"!="private"];
@@ -162,6 +161,15 @@ OSM_BENGALURU_QUERY = """
 );
 out center tags;
 """
+
+
+def _osm_query(south: float, west: float, north: float, east: float) -> str:
+    """One Overpass query per city; the bbox matches that city's regions.bounds."""
+    return f"[out:json][timeout:180][bbox:{south},{west},{north},{east}];" + _OSM_POI_SELECTORS
+
+
+OSM_BENGALURU_QUERY = _osm_query(12.75, 77.35, 13.20, 77.90)
+OSM_AHMEDABAD_QUERY = _osm_query(22.90, 72.40, 23.20, 72.75)
 
 
 def _osm_category(t: dict) -> str | None:
@@ -249,6 +257,17 @@ SOURCES: dict[str, dict] = {
         "query": OSM_BENGALURU_QUERY,
         "publisher": "OpenStreetMap contributors",
         "dataset": "Bengaluru public points of interest (Overpass extract)",
+        "licence": "ODbL 1.0",
+        "attribution": "© OpenStreetMap contributors, available under the Open Database Licence (ODbL)",
+        "adapter": _osm,
+    },
+    "osm-ahmedabad": {
+        "region": "ahmedabad",
+        "kind": "overpass",
+        "url": "https://overpass-api.de/api/interpreter",
+        "query": OSM_AHMEDABAD_QUERY,
+        "publisher": "OpenStreetMap contributors",
+        "dataset": "Ahmedabad public points of interest (Overpass extract)",
         "licence": "ODbL 1.0",
         "attribution": "© OpenStreetMap contributors, available under the Open Database Licence (ODbL)",
         "adapter": _osm,

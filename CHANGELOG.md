@@ -4,6 +4,12 @@ All notable changes to GeoVault. Format: [Keep a Changelog](https://keepachangel
 
 ## [Unreleased]
 
+### Added — Ahmedabad region (2026-11-20)
+- Migration `0009_region_ahmedabad` (UTM 43N cloaking CRS, city-zoom clamp) and an OpenStreetMap
+  snapshot of 375 public places. Overpass selectors are shared across Indian cities.
+- `GEOVAULT_OVERPASS_URL` lets the fetcher use another public Overpass instance when the default
+  is overloaded; the manifest records the URL actually used.
+
 ### Added — Milestone 9: HTTP hardening and logging (2026-11-20)
 - `SecurityHeaders` middleware: strict CSP, nosniff, X-Frame-Options, Referrer-Policy,
   Permissions-Policy, COOP/CORP, `no-store` on `/api/*`, HSTS in production; route-specific

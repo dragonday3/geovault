@@ -14,6 +14,7 @@ crawl, scan or probe any third-party infrastructure.
 import datetime as dt
 import hashlib
 import json
+import os
 import sys
 import time
 import urllib.parse
@@ -75,8 +76,12 @@ def _overpass_to_geojson(raw: bytes) -> dict:
 
 
 def fetch(key: str, src: dict) -> dict:
+    url = src["url"]
     if src["kind"] == "overpass":
-        body = _get(src["url"], urllib.parse.urlencode({"data": src["query"]}).encode())
+        # Public Overpass instances get overloaded (HTTP 502/504); another listed public
+        # instance can be used instead, e.g. GEOVAULT_OVERPASS_URL=https://overpass.kumi.systems/api/interpreter
+        url = os.environ.get("GEOVAULT_OVERPASS_URL", url)
+        body = _get(url, urllib.parse.urlencode({"data": src["query"]}).encode())
         collection = _overpass_to_geojson(body)
     else:
         collection = json.loads(_get(src["url"]))
@@ -85,7 +90,7 @@ def fetch(key: str, src: dict) -> dict:
     out.write_text(text + "\n", encoding="utf-8")
     return {
         "file": out.name,
-        "url": src["url"],
+        "url": url,
         "publisher": src["publisher"],
         "dataset": src["dataset"],
         "licence": src["licence"],

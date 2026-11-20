@@ -2,8 +2,8 @@
 
 [![CI](https://github.com/dragonday3/geovault/actions/workflows/ci.yml/badge.svg)](https://github.com/dragonday3/geovault/actions/workflows/ci.yml)
 
-A multi-region geospatial web application built on public open data for **Melbourne, Australia**
-and **Bengaluru, India**, developed as a security portfolio project: build it, threat-model it,
+A multi-region geospatial web application built on public open data for **Melbourne, Australia**,
+**Bengaluru, India** and **Ahmedabad, India**, developed as a security portfolio project: build it, threat-model it,
 attack a deliberately vulnerable **local lab** instance, remediate, and prove the fixes with
 regression tests.
 
@@ -95,7 +95,7 @@ docker compose exec api python -m app.manage promote-admin you@example.com
 ## Testing
 
 ```powershell
-docker compose -f compose.test.yml run --rm --build test   # 256 tests, ~30 s after the image is built
+docker compose -f compose.test.yml run --rm --build test   # 257 tests, ~45 s after the image is built
 docker compose -f compose.test.yml down -v                 # remove the throwaway test database
 ```
 
@@ -188,6 +188,7 @@ Gitleaks, private-key detection and file hygiene before every local commit:
 |---|---|---|---|---|
 | `melbourne` | AU | EPSG:7855 GDA2020 / MGA 55 | City of Melbourne Open Data — 5 datasets (CC BY 4.0) | 925 |
 | `bengaluru` | IN | EPSG:32643 WGS 84 / UTM 43N | OpenStreetMap extract (ODbL 1.0); Indian government datasets can be added | 1,995 |
+| `ahmedabad` | IN | EPSG:32643 WGS 84 / UTM 43N | OpenStreetMap extract (ODbL 1.0) | 375 |
 
 Datasets are snapshotted once into `data/raw/` with a SHA-256 manifest and imported offline,
 so the app never calls third-party services at runtime. All sources map into one shared
@@ -222,5 +223,5 @@ Security testing in this project targets **only** GeoVault instances owned by th
 localhost or the developer's own AWS account. No City of Melbourne, Government of India / data.gov.in,
 ISRO Bhuvan, OpenStreetMap or other third-party infrastructure is ever scanned or tested.
 
-Map tiles and Bengaluru place data © OpenStreetMap contributors (ODbL). Melbourne place data
+Map tiles and Bengaluru/Ahmedabad place data © OpenStreetMap contributors (ODbL). Melbourne place data
 © City of Melbourne (CC BY 4.0).

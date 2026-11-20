@@ -59,6 +59,18 @@
     "sha256": "de88ca1cc012dcfd86ced5deafc2ab1e0bc7ee91176232c64beda6de43c9e222",
     "url": "https://data.melbourne.vic.gov.au/api/explore/v2.1/catalog/datasets/public-toilets/exports/geojson"
   },
+  "osm-ahmedabad": {
+    "attribution": "\u00a9 OpenStreetMap contributors, available under the Open Database Licence (ODbL)",
+    "dataset": "Ahmedabad public points of interest (Overpass extract)",
+    "features": 375,
+    "fetched_at": "2026-11-20T18:02:22+00:00",
+    "file": "osm-ahmedabad.geojson",
+    "licence": "ODbL 1.0",
+    "publisher": "OpenStreetMap contributors",
+    "region": "ahmedabad",
+    "sha256": "7937d6bde2a3e7943c2aaa4876cf0153127a2ffc872cd77ca6ab7868aa2cbce0",
+    "url": "https://overpass.kumi.systems/api/interpreter"
+  },
   "osm-bengaluru": {
     "attribution": "\u00a9 OpenStreetMap contributors, available under the Open Database Licence (ODbL)",
     "dataset": "Bengaluru public points of interest (Overpass extract)",

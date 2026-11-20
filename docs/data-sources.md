@@ -15,6 +15,7 @@ publishers' services. Snapshots are verified against SHA-256 hashes in
 | `com-playgrounds` | Melbourne | City of Melbourne — Playgrounds (polygons → interior point) | CC BY 4.0 | 45 |
 | `com-public-artworks` | Melbourne | City of Melbourne — Public artworks, fountains and monuments | CC BY 4.0 | 261 |
 | `osm-bengaluru` | Bengaluru | OpenStreetMap contributors — Overpass extract | ODbL 1.0 | 1,995 of 1,996 |
+| `osm-ahmedabad` | Ahmedabad | OpenStreetMap contributors — Overpass extract (fetched via the kumi.systems public Overpass instance while overpass-api.de returned 502) | ODbL 1.0 | 375 of 375 |
 
 Attribution text for each source is stored in the `place_sources` table, served by
 `GET /api/sources`, and shown in the map sidebar. CC BY 4.0 and ODbL both require it.
@@ -33,7 +34,8 @@ Attribution text for each source is stored in the `place_sources` table, served 
 - The City of Melbourne portal has **no EV-charging dataset**, so Melbourne has no `EV charging` places.
 - The landmarks dataset lists only **one library** (The Melbourne Athenaeum Library). City of
   Melbourne branch libraries are not in these datasets.
-- The OSM snapshot reflects volunteer mapping at fetch time. Coverage and naming vary by suburb.
+- OSM coverage for Ahmedabad is thinner than for Bengaluru (375 vs 1,995 places), and Ahmedabad has no EV-charging points in the extract.
+- The OSM snapshots reflect volunteer mapping at fetch time. Coverage and naming vary by suburb.
 
 ## Category vocabulary
 
@@ -47,6 +49,8 @@ Drinking water, EV charging.
 
 ```powershell
 py -3.10 data/fetch_sources.py com-landmarks        # one source (or omit the key for all)
+# If the default Overpass server is overloaded (502/504), use another public instance:
+$env:GEOVAULT_OVERPASS_URL = "https://overpass.kumi.systems/api/interpreter"; py -3.10 data/fetch_sources.py osm-ahmedabad
 docker compose run --rm -v ./data:/srv/data:ro api python /srv/data/import_sources.py com-landmarks
 ```
 
