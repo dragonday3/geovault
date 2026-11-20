@@ -1,10 +1,12 @@
 # GeoVault
 
 A multi-region geospatial web application built on public open data for **Melbourne, Australia**
-and **Bengaluru, India**, developed as a security portfolio project: build it, threat-model it, attack a deliberately vulnerable
-**local lab** instance, remediate, and prove the fixes with regression tests.
+and **Bengaluru, India**, developed as a security portfolio project: build it, threat-model it,
+attack a deliberately vulnerable **local lab** instance, remediate, and prove the fixes with
+regression tests.
 
-> **Status: Milestone 1 — starter.** Public places API + map. Authentication, favourites,
+> **Status: Milestone 2 — real open data.** Public places API + map over ~2,900 real places.
+> Authentication, favourites,
 > sharing, lab mode, GeoServer and CI arrive in later milestones (see `CHANGELOG.md`).
 > Only features listed under *What works now* are implemented.
 
@@ -14,11 +16,12 @@ and **Bengaluru, India**, developed as a security portfolio project: build it, t
 |---|---|
 | `GET /api/health` | API + database health (`503` if the DB is unreachable) |
 | `GET /api/regions` | Supported regions with bounds, centre and zoom limits |
+| `GET /api/sources` | Dataset provenance, licence and attribution; optional `region` |
 | `GET /api/categories` | Place categories with counts; optional `region` |
 | `GET /api/places` | Filter by `region`, `category`, name search `q`, `bbox=minLon,minLat,maxLon,maxLat`; `limit` ≤ 500 |
 | `GET /api/places/near` | `lat`, `lon`, `radius_m` ≤ 5000, `limit` ≤ 100, optional `region`/`category`; nearest first with `distance_m` |
 | `GET /api/places/{id}` | Single place |
-| `GET /` | Leaflet map UI: region switcher, search, category filters, click-to-search nearby |
+| `GET /` | Leaflet map UI: region switcher, search, category filters, click-to-search nearby, data attributions |
 | `GET /docs` | OpenAPI docs (local environment only; disabled when `GEOVAULT_ENV=production`) |
 
 Responses are GeoJSON with explicit response schemas.
@@ -40,9 +43,8 @@ py -3.10 -c "import secrets; print(secrets.token_urlsafe(32))"   # run twice, pa
 docker compose up -d --build
 docker compose ps            # api and db should both show (healthy)
 
-# 3. Load the sample places for each region
-docker compose run --rm -v ./data:/srv/data:ro api python /srv/data/load_places.py /srv/data/samples/melbourne.geojson --region melbourne --source sample
-docker compose run --rm -v ./data:/srv/data:ro api python /srv/data/load_places.py /srv/data/samples/bengaluru.geojson --region bengaluru --source sample
+# 3. Import the committed open-data snapshots (offline: reads data/raw/, verifies SHA-256)
+docker compose run --rm -v ./data:/srv/data:ro api python /srv/data/import_sources.py
 ```
 
 macOS/Linux: use `cp .env.example .env` and `python3 -c ...`; the other commands are identical.
@@ -80,21 +82,23 @@ curl.exe -s "http://127.0.0.1:8000/api/places/near?lat=-37.8136&lon=144.9631&rad
 
 ## Regions and data
 
-| Region | Country | Projected CRS (precision cloaking) | Planned open data (milestone 2) |
-|---|---|---|---|
-| `melbourne` | AU | EPSG:7855 GDA2020 / MGA 55 | City of Melbourne Open Data (CC BY 4.0) |
-| `bengaluru` | IN | EPSG:32643 WGS 84 / UTM 43N | Open Government Data Platform India (GODL-India) and other openly licensed civic data |
+| Region | Country | Projected CRS (precision cloaking) | Data | Places |
+|---|---|---|---|---|
+| `melbourne` | AU | EPSG:7855 GDA2020 / MGA 55 | City of Melbourne Open Data — 5 datasets (CC BY 4.0) | 925 |
+| `bengaluru` | IN | EPSG:32643 WGS 84 / UTM 43N | OpenStreetMap extract (ODbL 1.0); Indian government datasets can be added | 1,995 |
 
-`data/samples/*.geojson` are small hand-made seeds of well-known public places (approximate
-coordinates), replaced by the open datasets in milestone 2. The loader (`data/load_places.py`)
-upserts on `(source, source_id)`, converts polygons to an interior point, and rejects invalid
-geometry, missing fields and points outside the region. Region bounds are also enforced in the
-database by a trigger, so no writer can bypass them.
+Datasets are snapshotted once into `data/raw/` with a SHA-256 manifest and imported offline,
+so the app never calls third-party services at runtime. All sources map into one shared
+category list. Region bounds are enforced in the database by a trigger, so no writer can
+bypass them. Full provenance, exclusions (e.g. private dwellings), known gaps and how to add
+data.gov.in / OpenCity files: **[docs/data-sources.md](docs/data-sources.md)**.
 
 **Map boundaries (India).** Each region's map is clamped to its city bounds at a minimum zoom, so
 national and international boundaries are never rendered. This avoids depicting India's borders
-differently from the official Survey of India depiction. An optional ISRO Bhuvan basemap is planned
-for the Bengaluru view, subject to Bhuvan's terms of use.
+differently from the official Survey of India depiction.
+
+**ISRO Bhuvan.** Bhuvan's terms grant a view-only, single-user licence, so its tiles are not
+embedded. Bengaluru places link out to Bhuvan 2D with a copy-coordinates helper instead.
 
 ## Project layout
 
@@ -102,7 +106,8 @@ for the Bengaluru view, subject to Bhuvan's terms of use.
 app/            FastAPI application (config, database pool, migrations runner, routers, schemas)
 db/init/        one-time database bootstrap (least-privilege app role)
 db/migrations/  numbered SQL migrations, applied automatically at API start-up
-data/           regional sample data + GeoJSON loader
+data/           dataset catalogue (sources.py), fetcher, importer, raw snapshots, test seeds
+docs/           data sources (security documentation follows in later milestones)
 frontend/       static map UI (vanilla JS + vendored Leaflet)
 .github/        Dependabot configuration (CI workflows arrive in milestone 3)
 ```
@@ -113,4 +118,5 @@ Security testing in this project targets **only** GeoVault instances owned by th
 localhost or the developer's own AWS account. No City of Melbourne, Government of India / data.gov.in,
 ISRO Bhuvan, OpenStreetMap or other third-party infrastructure is ever scanned or tested.
 
-Map tiles © OpenStreetMap contributors.
+Map tiles and Bengaluru place data © OpenStreetMap contributors (ODbL). Melbourne place data
+© City of Melbourne (CC BY 4.0).

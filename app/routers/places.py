@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from psycopg import Connection
 
 from app.database import get_conn
-from app.schemas.places import CategoryCount, PlaceCollection, PlaceFeature, Region
+from app.schemas.places import CategoryCount, DataSource, PlaceCollection, PlaceFeature, Region
 
 router = APIRouter(prefix="/api", tags=["places"])
 
@@ -68,6 +68,20 @@ def regions(conn: Conn):
                default_zoom, min_zoom
         FROM regions ORDER BY name
         """
+    ).fetchall()
+
+
+@router.get("/sources", response_model=list[DataSource])
+def sources(conn: Conn, region: RegionCode = None):
+    """Provenance and licence attribution for every imported dataset."""
+    return conn.execute(
+        """
+        SELECT key, region, publisher, dataset, licence, attribution, url, fetched_at
+        FROM place_sources
+        WHERE (%(region)s::text IS NULL OR region = %(region)s)
+        ORDER BY region, key
+        """,
+        {"region": region},
     ).fetchall()
 
 

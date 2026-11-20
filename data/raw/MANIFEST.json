@@ -1,0 +1,74 @@
+{
+  "com-drinking-fountains": {
+    "attribution": "Contains data \u00a9 City of Melbourne, licensed under CC BY 4.0",
+    "dataset": "Drinking fountains",
+    "features": 338,
+    "fetched_at": "2026-11-20T10:46:53+00:00",
+    "file": "com-drinking-fountains.geojson",
+    "licence": "CC BY 4.0",
+    "publisher": "City of Melbourne",
+    "region": "melbourne",
+    "sha256": "5732f54d7f3c65caeac5040e7d05df99efb8e23ed65c875112be9db09801d960",
+    "url": "https://data.melbourne.vic.gov.au/api/explore/v2.1/catalog/datasets/drinking-fountains/exports/geojson"
+  },
+  "com-landmarks": {
+    "attribution": "Contains data \u00a9 City of Melbourne, licensed under CC BY 4.0",
+    "dataset": "Landmarks and places of interest",
+    "features": 242,
+    "fetched_at": "2026-11-20T10:46:45+00:00",
+    "file": "com-landmarks.geojson",
+    "licence": "CC BY 4.0",
+    "publisher": "City of Melbourne",
+    "region": "melbourne",
+    "sha256": "ff553af182a3c693c037193df844537fab58bac5a32fa9527d1d642827bea772",
+    "url": "https://data.melbourne.vic.gov.au/api/explore/v2.1/catalog/datasets/landmarks-and-places-of-interest-including-schools-theatres-health-services-spor/exports/geojson"
+  },
+  "com-playgrounds": {
+    "attribution": "Contains data \u00a9 City of Melbourne, licensed under CC BY 4.0",
+    "dataset": "Playgrounds",
+    "features": 45,
+    "fetched_at": "2026-11-20T10:46:57+00:00",
+    "file": "com-playgrounds.geojson",
+    "licence": "CC BY 4.0",
+    "publisher": "City of Melbourne",
+    "region": "melbourne",
+    "sha256": "a186b08a38e8514b46dfcd9740b145ab1dcd43a8769fc22a9139e741d030fa91",
+    "url": "https://data.melbourne.vic.gov.au/api/explore/v2.1/catalog/datasets/playgrounds/exports/geojson"
+  },
+  "com-public-artworks": {
+    "attribution": "Contains data \u00a9 City of Melbourne, licensed under CC BY 4.0",
+    "dataset": "Public artworks, fountains and monuments",
+    "features": 261,
+    "fetched_at": "2026-11-20T10:47:01+00:00",
+    "file": "com-public-artworks.geojson",
+    "licence": "CC BY 4.0",
+    "publisher": "City of Melbourne",
+    "region": "melbourne",
+    "sha256": "fc77e2e5803ce3abecef17248568a82e683e9ca768134452ba4283a4ec09de8d",
+    "url": "https://data.melbourne.vic.gov.au/api/explore/v2.1/catalog/datasets/public-artworks-fountains-and-monuments/exports/geojson"
+  },
+  "com-public-toilets": {
+    "attribution": "Contains data \u00a9 City of Melbourne, licensed under CC BY 4.0",
+    "dataset": "Public toilets",
+    "features": 74,
+    "fetched_at": "2026-11-20T10:46:49+00:00",
+    "file": "com-public-toilets.geojson",
+    "licence": "CC BY 4.0",
+    "publisher": "City of Melbourne",
+    "region": "melbourne",
+    "sha256": "de88ca1cc012dcfd86ced5deafc2ab1e0bc7ee91176232c64beda6de43c9e222",
+    "url": "https://data.melbourne.vic.gov.au/api/explore/v2.1/catalog/datasets/public-toilets/exports/geojson"
+  },
+  "osm-bengaluru": {
+    "attribution": "\u00a9 OpenStreetMap contributors, available under the Open Database Licence (ODbL)",
+    "dataset": "Bengaluru public points of interest (Overpass extract)",
+    "features": 1996,
+    "fetched_at": "2026-11-20T10:47:57+00:00",
+    "file": "osm-bengaluru.geojson",
+    "licence": "ODbL 1.0",
+    "publisher": "OpenStreetMap contributors",
+    "region": "bengaluru",
+    "sha256": "61cf16999690848ddfb5422c82292e65254902f95288eb977cc6803d40046cf1",
+    "url": "https://overpass-api.de/api/interpreter"
+  }
+}

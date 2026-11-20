@@ -1,5 +1,6 @@
 """Explicit response models for the public places API (GeoJSON-shaped)."""
 
+from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel
@@ -48,3 +49,14 @@ class Region(BaseModel):
     centre: tuple[float, float]  # lon, lat
     default_zoom: int
     min_zoom: int
+
+
+class DataSource(BaseModel):
+    key: str
+    region: str
+    publisher: str
+    dataset: str
+    licence: str
+    attribution: str
+    url: str
+    fetched_at: datetime

@@ -5,3 +5,5 @@ Dockerfile text eol=lf
 *.png binary
 # Vendored files must stay byte-identical or their SRI hashes break
 frontend/vendor/** -text
+# Open-data snapshots are SHA-256 verified on import; never rewrite their bytes
+data/raw/** -text

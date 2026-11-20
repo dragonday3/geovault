@@ -4,6 +4,25 @@ All notable changes to GeoVault. Format: [Keep a Changelog](https://keepachangel
 
 ## [Unreleased]
 
+### Added — Milestone 2: real open data (2026-11-20)
+- Dataset catalogue `data/sources.py`: 5 City of Melbourne datasets (CC BY 4.0) and an
+  OpenStreetMap Bengaluru extract (ODbL), each with an adapter into one shared category list.
+- `data/fetch_sources.py`: one-time HTTPS snapshot download (stdlib only) with
+  `data/raw/MANIFEST.json` recording licence, attribution, URL, fetch time and SHA-256.
+- `data/import_sources.py`: offline import that verifies each snapshot hash, records provenance,
+  upserts, prunes stale rows, and runs one transaction per source. Re-import is idempotent.
+- Migration `0003_place_sources` and `GET /api/sources` for licence attribution.
+- Map: viewport-based loading with cap notice, data-source attributions in the sidebar,
+  Bhuvan 2D link-out and copy-coordinates for Bengaluru places, stale-response guard.
+- `docs/data-sources.md`: provenance, exclusions, known gaps, refresh procedure, manual
+  Indian-government data workflow, Bhuvan licence reasoning.
+
+### Changed
+- Hand-made sample rows replaced by ~2,900 real places (925 Melbourne, 1,995 Bengaluru).
+  `data/samples/` is kept as a small test seed.
+- Melbourne landmarks exclude offices, vacant land, industrial sites and private dwellings.
+- `.gitattributes`: `data/raw/**` stored byte-exact so snapshot hashes survive Windows checkouts.
+
 ### Added — Milestone 1: starter (2026-11-20)
 - Docker Compose stack: PostGIS 16-3.5 + FastAPI API (Python 3.12), images pinned by digest.
 - Public places API: `/api/health`, `/api/categories`, `/api/places`, `/api/places/near`,

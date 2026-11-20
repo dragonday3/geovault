@@ -3,6 +3,7 @@
 // DOM APIs — never innerHTML — so place names cannot inject markup or script.
 
 (() => {
+  const LIST_LIMIT = 500; // matches the API's MAX_LIST_LIMIT
   const PALETTE = ["#2563eb", "#16a34a", "#d97706", "#9333ea", "#dc2626", "#0891b2", "#db2777", "#65a30d"];
 
   const $ = (id) => document.getElementById(id);
@@ -56,6 +57,11 @@
     $("detail-distance-label").hidden = !hasDist;
     $("detail-distance").hidden = !hasDist;
     if (hasDist) $("detail-distance").textContent = `${Math.round(p.distance_m)} m`;
+    // Link-out only: Bhuvan's terms do not cover embedding its tiles in third-party apps.
+    const region = regions.get(p.region);
+    $("bhuvan").hidden = !(region && region.country_code === "IN");
+    $("copy-coords").dataset.coords = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+    $("copy-coords").textContent = "Copy coordinates";
     $("detail").hidden = false;
   }
 
@@ -92,10 +98,15 @@
       item.append(btn);
       list.append(item);
     }
-    setStatus(features.length ? "" : "No places match.");
+    if (!features.length) setStatus("No places match in this area.");
+    else if (!state.near && features.length >= LIST_LIMIT) {
+      setStatus(`Showing the first ${LIST_LIMIT} places in view — zoom in or filter to see more.`);
+    } else setStatus("");
   }
 
+  let requestSeq = 0;
   async function refresh() {
+    const seq = ++requestSeq; // only the newest request may render (pans fire many)
     setStatus("Loading…");
     try {
       let data;
@@ -105,13 +116,17 @@
           radius_m: $("radius").value, limit: 100, category: state.category, region: state.region,
         });
       } else {
+        // Load only what is in view; the API caps a page at LIST_LIMIT places.
+        const b = map.getBounds();
+        const bbox = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()]
+          .map((v) => v.toFixed(6)).join(",");
         data = await api("/api/places", {
-          region: state.region, category: state.category, q: state.q, limit: 500,
+          region: state.region, category: state.category, q: state.q, bbox, limit: LIST_LIMIT,
         });
       }
-      render(data.features);
+      if (seq === requestSeq) render(data.features);
     } catch (err) {
-      setStatus("Could not load places. Is the API running?");
+      if (seq === requestSeq) setStatus("Could not load places. Is the API running?");
     }
   }
 
@@ -134,6 +149,32 @@
       }
     } catch {
       box.replaceChildren(el("span", "Categories unavailable", "hint"));
+    }
+  }
+
+  async function loadSources() {
+    const list = $("sources");
+    try {
+      const sources = await api("/api/sources", { region: state.region });
+      list.replaceChildren();
+      for (const s of sources) {
+        const item = el("li");
+        // Only https links are rendered; text always goes through textContent.
+        if (s.url.startsWith("https://")) {
+          const a = el("a", s.dataset);
+          a.href = s.url;
+          a.target = "_blank";
+          a.rel = "noopener noreferrer";
+          item.append(a);
+        } else {
+          item.append(el("span", s.dataset));
+        }
+        item.append(el("span", ` — ${s.attribution}`, "hint"));
+        list.append(item);
+      }
+      if (!sources.length) list.append(el("li", "Sample data (no external sources imported)", "hint"));
+    } catch {
+      list.replaceChildren(el("li", "Sources unavailable", "hint"));
     }
   }
 
@@ -167,6 +208,20 @@
   $("near-btn").addEventListener("click", () => searchNear(map.getCenter()));
   $("radius").addEventListener("change", () => { if (state.near) searchNear(state.near); });
   map.on("click", (e) => searchNear(e.latlng));
+  let moveTimer;
+  map.on("moveend", () => {
+    if (state.near || !state.region) return; // nearby results are anchored to a point, not the view
+    clearTimeout(moveTimer);
+    moveTimer = setTimeout(refresh, 300);
+  });
+  $("copy-coords").addEventListener("click", async (e) => {
+    try {
+      await navigator.clipboard.writeText(e.currentTarget.dataset.coords);
+      e.currentTarget.textContent = "Copied ✓";
+    } catch {
+      e.currentTarget.textContent = e.currentTarget.dataset.coords;
+    }
+  });
   $("clear-btn").addEventListener("click", () => {
     resetSearch();
     loadCategories().then(refresh);
@@ -189,6 +244,7 @@
     map.setView([r.centre[1], r.centre[0]], r.default_zoom);
     $("subtitle").textContent = `${r.name} public places`;
     resetSearch();
+    loadSources();
     loadCategories().then(refresh);
   }
 

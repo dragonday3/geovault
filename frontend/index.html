@@ -55,12 +55,23 @@
           <dt>Source</dt><dd id="detail-source"></dd>
           <dt id="detail-distance-label" hidden>Distance</dt><dd id="detail-distance" hidden></dd>
         </dl>
+        <div id="bhuvan" class="bhuvan" hidden>
+          <a href="https://bhuvan-app1.nrsc.gov.in/bhuvan2d/bhuvan/bhuvan2d.php"
+             target="_blank" rel="noopener noreferrer">Open Bhuvan 2D (ISRO/NRSC) ↗</a>
+          <button id="copy-coords" type="button" class="ghost small">Copy coordinates</button>
+          <p class="hint">Use Bhuvan's “find by coordinates” with the copied values.</p>
+        </div>
       </section>
 
       <section class="results-wrap">
         <h2 class="section-title">Results <span id="count" class="count"></span></h2>
         <ul id="results" class="results"></ul>
         <p id="status" class="status" role="status"></p>
+      </section>
+
+      <section class="sources" aria-labelledby="sources-heading">
+        <h2 id="sources-heading" class="section-title">Data sources</h2>
+        <ul id="sources" class="source-list"></ul>
       </section>
     </aside>
 

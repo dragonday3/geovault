@@ -1,4 +1,6 @@
-"""Load a GeoJSON file of public places into the `places` table.
+"""Load a GeoJSON file of public places into the `places` table (generic, field-mapped).
+
+For the catalogued open datasets use import_sources.py, which reuses upsert_rows().
 
 Idempotent: upserts on (source, source_id), so re-running an import updates rows
 instead of duplicating them. Each feature is validated; bad ones are reported and
@@ -41,6 +43,44 @@ def clean(value: object, max_len: int) -> str | None:
     return text[:max_len] or None
 
 
+def upsert_rows(conn: psycopg.Connection, region: str, source: str, rows) -> dict:
+    """Validate and upsert rows of {source_id, name, category, geometry}.
+
+    Returns counts plus the set of accepted source_ids (used to prune stale rows).
+    """
+    stats = {"read": 0, "inserted": 0, "updated": 0, "rejected": 0}
+    accepted: set[str] = set()
+    for i, r in enumerate(rows):
+        stats["read"] += 1
+        row = {
+            "region": region,
+            "source": source,
+            "source_id": clean(r.get("source_id"), 200),
+            "name": clean(r.get("name"), 300),
+            "category": clean(r.get("category"), 100),
+            "geom": json.dumps(r["geometry"]) if r.get("geometry") else None,
+        }
+        missing = [k for k, v in row.items() if v is None]
+        if missing:
+            stats["rejected"] += 1
+            print(f"  reject #{i}: missing {missing}", file=sys.stderr)
+            continue
+        try:
+            with conn.transaction():  # savepoint: one bad feature never aborts the load
+                res = conn.execute(UPSERT, row).fetchone()
+        except psycopg.Error as exc:
+            stats["rejected"] += 1
+            print(f"  reject #{i} ({row['source_id']}): {exc.diag.message_primary}", file=sys.stderr)
+            continue
+        if res is None:
+            stats["rejected"] += 1
+            print(f"  reject #{i} ({row['source_id']}): invalid or empty geometry", file=sys.stderr)
+        else:
+            stats["inserted" if res[0] else "updated"] += 1
+            accepted.add(row["source_id"])
+    return {**stats, "accepted_ids": accepted}
+
+
 def load(
     path: str,
     region: str,
@@ -53,36 +93,18 @@ def load(
 ) -> dict[str, int]:
     with open(path, encoding="utf-8") as fh:
         features = json.load(fh).get("features", [])
-
-    stats = {"read": len(features), "inserted": 0, "updated": 0, "rejected": 0}
+    rows = (
+        {
+            "source_id": (f.get("properties") or {}).get(id_field),
+            "name": (f.get("properties") or {}).get(name_field),
+            "category": (f.get("properties") or {}).get(category_field) if category_field else category,
+            "geometry": f.get("geometry"),
+        }
+        for f in features
+    )
     with psycopg.connect(dsn) as conn:
-        for i, feat in enumerate(features):
-            props = feat.get("properties") or {}
-            row = {
-                "region": region,
-                "source": source,
-                "source_id": clean(props.get(id_field), 200),
-                "name": clean(props.get(name_field), 300),
-                "category": clean(props.get(category_field) if category_field else category, 100),
-                "geom": json.dumps(feat.get("geometry")) if feat.get("geometry") else None,
-            }
-            missing = [k for k, v in row.items() if v is None]
-            if missing:
-                stats["rejected"] += 1
-                print(f"  reject #{i}: missing {missing}", file=sys.stderr)
-                continue
-            try:
-                with conn.transaction():  # savepoint: one bad feature never aborts the load
-                    res = conn.execute(UPSERT, row).fetchone()
-            except psycopg.Error as exc:
-                stats["rejected"] += 1
-                print(f"  reject #{i} ({row['source_id']}): {exc.diag.message_primary}", file=sys.stderr)
-                continue
-            if res is None:
-                stats["rejected"] += 1
-                print(f"  reject #{i} ({row['source_id']}): invalid or empty geometry", file=sys.stderr)
-            else:
-                stats["inserted" if res[0] else "updated"] += 1
+        stats = upsert_rows(conn, region, source, rows)
+    stats.pop("accepted_ids")
     return stats
 
 
