@@ -8,15 +8,12 @@ no code path where request input becomes SQL text.
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from psycopg import Connection
+from fastapi import APIRouter, HTTPException, Query
 
-from app.database import get_conn
+from app.database import Conn
 from app.schemas.places import CategoryCount, DataSource, PlaceCollection, PlaceFeature, Region
 
 router = APIRouter(prefix="/api", tags=["places"])
-
-Conn = Annotated[Connection, Depends(get_conn)]
 
 # Resource-consumption caps (OWASP API4). Lab mode will deliberately remove these.
 MAX_RADIUS_M = 5000

@@ -34,6 +34,7 @@ services:
     image: geovault-api:test
     environment:
       GEOVAULT_DATABASE_URL: postgresql://geovault_app:${GEOVAULT_DB_PASSWORD}@db-test:5432/geovault
+      GEOVAULT_JWT_SECRET: ${GEOVAULT_JWT_SECRET:?set GEOVAULT_JWT_SECRET in .env}
     depends_on:
       db-test:
         condition: service_healthy

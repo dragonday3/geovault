@@ -4,13 +4,17 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, Response
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app import migrate
 from app.config import Settings, get_settings
 from app.database import create_pool
-from app.routers import places
+from app.routers import auth, places, users
 from app.schemas.places import Health
+from app.security.rate_limit import LoginLimiter, RateLimiter
 
 log = logging.getLogger("geovault")
 
@@ -49,7 +53,21 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             response.status_code = 503  # lets Docker/load balancers mark us unhealthy
             return Health(status="degraded", db="unavailable")
 
+    app.state.settings = settings
+    app.state.login_limiter = LoginLimiter()
+    app.state.register_limiter = RateLimiter(limit=10, window_seconds=3600)
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_error(request: Request, exc: RequestValidationError):
+        # FastAPI's default 422 body echoes the submitted value ("input") back. For a
+        # rejected password that would put the password in the response and any logs
+        # that capture it. Return only where and why validation failed.
+        errors = [{"loc": e["loc"], "msg": e["msg"], "type": e["type"]} for e in exc.errors()]
+        return JSONResponse({"detail": jsonable_encoder(errors)}, status_code=422)
+
     app.include_router(places.router)
+    app.include_router(auth.router)
+    app.include_router(users.router)
 
     # Mounted last so /api/* and /docs take precedence over static files.
     app.mount("/", StaticFiles(directory=settings.frontend_dir, html=True), name="frontend")

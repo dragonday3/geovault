@@ -7,7 +7,7 @@ and **Bengaluru, India**, developed as a security portfolio project: build it, t
 attack a deliberately vulnerable **local lab** instance, remediate, and prove the fixes with
 regression tests.
 
-> **Status: Milestone 3 — tests and CI.** Public places API + map over ~2,900 real places.
+> **Status: Milestone 5 — authentication.** Public places API + map over ~2,900 real places.
 > Authentication, favourites,
 > sharing, lab mode, GeoServer and CI arrive in later milestones (see `CHANGELOG.md`).
 > Only features listed under *What works now* are implemented.
@@ -24,6 +24,11 @@ regression tests.
 | `GET /api/places/near` | `lat`, `lon`, `radius_m` ≤ 5000, `limit` ≤ 100, optional `region`/`category`; nearest first with `distance_m` |
 | `GET /api/places/{id}` | Single place |
 | `GET /` | Leaflet map UI: region switcher, search, category filters, click-to-search nearby, data attributions |
+| `POST /api/auth/register` | Create account (≥12-char, breach-checked password). Always `202` with a generic message, so it is not an enumeration oracle |
+| `POST /api/auth/login` | 15-min access token in the body; rotating refresh token in an HttpOnly cookie; rate-limited |
+| `POST /api/auth/refresh` | Rotate refresh token (cookie + `X-CSRF-Token`); reuse of an old token revokes the session |
+| `POST /api/auth/logout` | Revoke the session and clear cookies (requires `X-CSRF-Token`) |
+| `GET /api/users/me` | The authenticated user's profile (`Authorization: Bearer`) |
 | `GET /docs` | OpenAPI docs (local environment only; disabled when `GEOVAULT_ENV=production`) |
 
 Responses are GeoJSON with explicit response schemas.
@@ -39,7 +44,7 @@ Prerequisites: Docker Desktop.
 ```powershell
 # 1. Create your local secrets file (gitignored) and put strong random values in it
 Copy-Item .env.example .env
-py -3.10 -c "import secrets; print(secrets.token_urlsafe(32))"   # run twice, paste into .env
+py -3.10 -c "import secrets; print(secrets.token_urlsafe(48))"   # run 3x: two DB passwords + JWT secret
 
 # 2. Start the stack (first run builds the API image and initialises the database)
 docker compose up -d --build
@@ -69,7 +74,7 @@ curl.exe -s "http://127.0.0.1:8000/api/places/near?lat=-37.8136&lon=144.9631&rad
 ## Testing
 
 ```powershell
-docker compose -f compose.test.yml run --rm --build test   # 50 tests, ~3 s after the image is built
+docker compose -f compose.test.yml run --rm --build test   # 101 tests, ~6 s after the image is built
 docker compose -f compose.test.yml down -v                 # remove the throwaway test database
 ```
 
@@ -88,6 +93,8 @@ database host other than the dedicated test instance.
 | Data integrity | tampered snapshot refused with DB untouched; provenance recorded; idempotent re-import; stale rows pruned |
 | Adapters | private dwellings/offices excluded; shared category vocabulary; stable ids; OSM mapping |
 | Frontend (static) | no `innerHTML`/`eval`/`document.write`; no inline scripts or handlers (CSP-ready); vendored Leaflet matches SRI hashes |
+| Authentication | password policy, generic failures, Argon2 timing parity, rate limits, hardened cookies, `alg=none`/forged/expired/wrong-audience JWTs rejected, role claim ignored, refresh rotation + reuse detection, logout revocation, hashed token storage, secret-free audit |
+| Schema constraints | share must target exactly one user or an expiring link; photos must be EXIF-stripped with server-generated keys; favourites stay in-region without leaking coordinates; deleting a user cascades private data but keeps anonymised audit rows |
 | Docs | `/docs` and `/openapi.json` return 404 in production |
 
 **CI** (`.github/workflows/ci.yml`, on every push and PR) runs ruff, the test suite,
@@ -112,6 +119,13 @@ Gitleaks, private-key detection and file hygiene before every local commit:
   and never ships in the runtime image.
 - **Frontend:** API data is rendered with `textContent` only (no `innerHTML`); Leaflet is self-hosted
   and pinned with Subresource Integrity hashes.
+- **Authentication:** Argon2id, NIST-style password policy with a 30k breached-password list,
+  per-account and per-IP rate limiting, no user enumeration (generic errors plus constant-time
+  path), HS256 JWTs with pinned algorithm and required claims, role read from the DB not the
+  token, and refresh-token rotation with reuse detection. Design and trade-offs:
+  **[docs/authentication.md](docs/authentication.md)**.
+- **Audit log:** registration, login success/failure, rate limiting, refresh, reuse detection
+  and logout are recorded without passwords, tokens or attempted email addresses.
 - **Secrets:** read from environment (`.env`, gitignored); the DB DSN is a `SecretStr` so it never
   appears in logs or reprs.
 
@@ -142,7 +156,7 @@ app/            FastAPI application (config, database pool, migrations runner, r
 db/init/        one-time database bootstrap (least-privilege app role)
 db/migrations/  numbered SQL migrations, applied automatically at API start-up
 data/           dataset catalogue (sources.py), fetcher, importer, raw snapshots, test seeds
-docs/           data sources (security documentation follows in later milestones)
+docs/           data sources, authentication design (more security docs follow)
 frontend/       static map UI (vanilla JS + vendored Leaflet)
 tests/          unit + integration tests (real PostGIS)
 compose.test.yml  isolated test stack (separate compose project)

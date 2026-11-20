@@ -44,7 +44,9 @@ def client(dsn):
     from load_places import load
 
     app = create_app(Settings(database_url=dsn, env="local"))
-    with TestClient(app) as c:
+    # https base URL: the session cookies are Secure, and like a browser the client only
+    # sends Secure cookies over HTTPS.
+    with TestClient(app, base_url="https://testserver") as c:
         for region in ("melbourne", "bengaluru"):
             load(
                 str(ROOT / "data" / "samples" / f"{region}.geojson"),
@@ -65,3 +67,12 @@ def conn(dsn, client):
     with psycopg.connect(dsn) as c:
         yield c
         c.rollback()
+
+
+@pytest.fixture(autouse=True)
+def _reset_rate_limiters(client):
+    """Rate-limit state is per process; isolate tests from each other's attempts."""
+    client.app.state.login_limiter.account.reset()
+    client.app.state.login_limiter.ip.reset()
+    client.app.state.register_limiter.reset()
+    client.cookies.clear()

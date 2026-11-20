@@ -1,8 +1,9 @@
 """Connection pool and per-request connection dependency."""
 
 from collections.abc import Iterator
+from typing import Annotated
 
-from fastapi import Request
+from fastapi import Depends, Request
 from psycopg import Connection
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
@@ -23,3 +24,6 @@ def get_conn(request: Request) -> Iterator[Connection]:
     """Yield a pooled connection. The pool commits on success and rolls back on error."""
     with request.app.state.pool.connection() as conn:
         yield conn
+
+
+Conn = Annotated[Connection, Depends(get_conn)]

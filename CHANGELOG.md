@@ -4,6 +4,22 @@ All notable changes to GeoVault. Format: [Keep a Changelog](https://keepachangel
 
 ## [Unreleased]
 
+### Added — Milestone 5: authentication (2026-11-20)
+- Migrations `0004` (users, refresh_tokens, audit_log), `0005` (favourites, shares, photos with
+  defensive constraints), `0006` (checkins_synthetic, synthetic data only).
+- `POST /api/auth/register|login|refresh|logout`, `GET /api/users/me`.
+- Argon2id hashing; password policy (12-128 chars, 30,492 breached passwords from SecLists (MIT),
+  repetition and email checks); per-account and per-IP login rate limiting; registration rate limit.
+- HS256 access tokens (15 min, pinned algorithm, required claims, role never in the token) and
+  opaque refresh tokens stored as SHA-256, rotated on use, with family revocation on reuse.
+- HttpOnly/Secure/SameSite=Strict refresh cookie scoped to `/api/auth`; `__Host-` CSRF cookie
+  and `X-CSRF-Token` double-submit for refresh and logout.
+- Audit events for every auth action, without secrets or attempted email addresses.
+- 422 responses no longer echo submitted input (FastAPI's default would return a rejected password).
+- Start-up refuses weak `GEOVAULT_JWT_SECRET` values and token lifetimes above safe caps.
+- `docs/authentication.md`: flow, control-to-test mapping, token-storage decision, residual risks.
+- 51 new tests (101 total).
+
 ### Added — Milestone 3: tests and CI (2026-11-20)
 - 50 pytest tests against real PostGIS: API behaviour, input caps (API4), SQL-injection payloads,
   DB privileges/constraints/trigger/migrations, import integrity and pruning, adapter privacy
