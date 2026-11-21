@@ -4,6 +4,15 @@ All notable changes to GeoVault. Format: [Keep a Changelog](https://keepachangel
 
 ## [Unreleased]
 
+### Added — Milestone 13: threat model and test plan (2026-11-21)
+- `docs/threat-model.md`: assets, threat actors, data-flow diagram with nine trust boundaries,
+  attack-surface inventory, STRIDE per element (API, browser, DB, GeoServer, photo store, logs,
+  supply chain), abuse cases, OWASP API Top 10 (2023) coverage, residual risks and assumptions.
+  Every control is mapped to an existing automated test (all references verified).
+- `docs/test-plan.md`: scope and rules of engagement (localhost only, third parties excluded),
+  environment, WSTG v4.2 methodology, 40+ test cases traced to the threat model with expected
+  secure behaviour and the automated test, CVSS v3.1 scoring, finding template, exit criteria.
+
 ### Added — Milestone 12: GeoServer (2026-11-21)
 - Opt-in `geoserver` compose profile: GeoServer 2.28.0 (digest-pinned) on 127.0.0.1:8080,
   mandatory admin password, demo data skipped, unprivileged Tomcat, `cap_drop: ALL` plus the minimum

@@ -7,7 +7,7 @@ A multi-region geospatial web application built on public open data for **Melbou
 attack a deliberately vulnerable **local lab** instance, remediate, and prove the fixes with
 regression tests.
 
-> **Status: Milestone 12 — GeoServer (WMS/WFS).** Public places API + map over ~2,900 real places.
+> **Status: Milestone 13 — threat model and test plan.** Public places API + map over ~2,900 real places.
 > Authentication, favourites,
 > sharing, lab mode, GeoServer and CI arrive in later milestones (see `CHANGELOG.md`).
 > Only features listed under *What works now* are implemented.
@@ -164,6 +164,16 @@ are pinned by digest, and the workflow token is read-only. **Pre-commit** runs r
 Gitleaks, private-key detection and file hygiene before every local commit:
 `py -3.10 -m pip install pre-commit` then `py -3.10 -m pre_commit install`.
 
+## Security assessment
+
+- **[Threat model](docs/threat-model.md):** STRIDE per element over a data-flow diagram with
+  nine trust boundaries, an attack-surface inventory, abuse cases, OWASP API Top 10 (2023)
+  coverage and accepted residual risks. Every control cites the automated test that proves it.
+- **[Test plan](docs/test-plan.md):** WSTG v4.2 and API Top 10 methodology for an authorised,
+  localhost-only assessment. It sets out scope and rules of engagement (no third-party
+  infrastructure), test cases traced to the threat model, CVSS v3.1 scoring and the finding
+  template.
+
 ## Security design (implemented so far)
 
 - **Network exposure:** the API is published on `127.0.0.1` only; the database has no published port.
@@ -242,7 +252,7 @@ app/            FastAPI application (config, database pool, migrations runner, r
 db/init/        one-time database bootstrap (least-privilege app role)
 db/migrations/  numbered SQL migrations, applied automatically at API start-up
 data/           dataset catalogue (sources.py), fetcher, importer, raw snapshots, test seeds
-docs/           data sources, authentication design, privacy (location precision, photos)
+docs/           threat model, test plan, data sources, authentication, GeoServer, privacy
 frontend/       the hall UI: index.html, styles.css, icons.svg, js/ (api, dom, map, views/*), vendored Leaflet + fonts
 tests/          unit + integration tests (real PostGIS)
 compose.test.yml  isolated test stack (separate compose project)
