@@ -16,7 +16,7 @@ A favourite stores the **exact** point privately. Only the owner ever receives i
 cloak_point(geom, region.local_srid, share_precision_m)
   1. project the point into the region's metric CRS
        Melbourne -> EPSG:7855 (GDA2020 / MGA zone 55)
-       Bengaluru -> EPSG:32643 (WGS 84 / UTM zone 43N)
+       Bengaluru, Ahmedabad -> EPSG:32643 (WGS 84 / UTM zone 43N)
   2. snap to the CENTRE of its cell_m x cell_m grid square (100 m, 500 m or 1 km)
   3. project back to WGS 84 and round to 6 decimal places
 ```

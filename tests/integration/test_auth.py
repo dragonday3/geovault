@@ -93,7 +93,7 @@ def test_password_policy(client, password, reason):
 
 
 def test_password_must_not_contain_email(client):
-    r = register(client, "kairuphantom@example.com", password="kairuphantom-is-my-name!")
+    r = register(client, "riverstone@example.com", password="riverstone-is-my-name!")
     assert r.status_code == 422 and "email" in r.text
 
 

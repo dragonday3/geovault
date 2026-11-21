@@ -40,7 +40,7 @@ Attribution text for each source is stored in the `place_sources` table, served 
 ## Category vocabulary
 
 Every source maps into one shared list (`CATEGORIES` in `data/sources.py`), so a filter means
-the same thing in both cities: Park and garden, Playground, Library, Museum and gallery,
+the same thing in all three cities: Park and garden, Playground, Library, Museum and gallery,
 Theatre and venue, Public art and monument, Landmark, Sport and recreation, Place of worship,
 Education, Health, Emergency services, Transport, Market and shopping, Public toilet,
 Drinking water, EV charging.
@@ -80,7 +80,7 @@ API needs a registered key. Neither is bypassed. To add an Indian government sou
 Bhuvan's terms of use, as far as published material shows, grant a single-user,
 non-transferable, view-only licence. Embedding Bhuvan tiles in a third-party public app
 would therefore need permission from NRSC. GeoVault does **not** embed Bhuvan. For
-Bengaluru places, the detail panel offers a link to Bhuvan 2D and a *Copy coordinates*
+places in the Indian cities (Bengaluru, Ahmedabad), the detail panel offers a link to Bhuvan 2D and a *Copy coordinates*
 button for Bhuvan's find-by-coordinates tool. Bhuvan publishes no documented deep-link
 format, so none is guessed.
 

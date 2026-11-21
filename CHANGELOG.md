@@ -4,6 +4,13 @@ All notable changes to GeoVault. Format: [Keep a Changelog](https://keepachangel
 
 ## [Unreleased]
 
+### Docs (2026-11-21)
+- `docs/project-guide.md`: what GeoVault is, a screen-by-screen tour, how it works, milestone
+  status, skills and knowledge applied, 30-second interview explanations, cheat-sheet and glossary.
+- Stale facts corrected after a docs-vs-code audit: README status (3,295 places, lab mode the only
+  unbuilt milestone), Bhuvan link-out covers both Indian cities, Ahmedabad's projection in the
+  location-precision doc, PRODUCT.md counts. The suite stands at 295 tests (M12 and M13).
+
 ### Added — Milestone 13: threat model and test plan (2026-11-21)
 - `docs/threat-model.md`: assets, threat actors, data-flow diagram with nine trust boundaries,
   attack-surface inventory, STRIDE per element (API, browser, DB, GeoServer, photo store, logs,

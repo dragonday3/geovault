@@ -7,10 +7,10 @@ A multi-region geospatial web application built on public open data for **Melbou
 attack a deliberately vulnerable **local lab** instance, remediate, and prove the fixes with
 regression tests.
 
-> **Status: Milestone 13 — threat model and test plan.** Public places API + map over ~2,900 real places.
-> Authentication, favourites,
-> sharing, lab mode, GeoServer and CI arrive in later milestones (see `CHANGELOG.md`).
-> Only features listed under *What works now* are implemented.
+> **Status: Milestone 13 — threat model and test plan.** 3,295 real places across three cities;
+> accounts, private favourites, cloaked sharing, photos, admin, GeoServer, CI and the full UI are
+> built (see `CHANGELOG.md`). **Lab mode (milestone 11) is not built yet.** Only features listed
+> under *What works now* are implemented. New here? Read the **[project guide](docs/project-guide.md)**.
 
 ## Interface
 
@@ -143,7 +143,6 @@ database host other than the dedicated test instance.
 | Database | app role is not superuser and cannot read server files; region-bounds trigger; unique keys; migrations idempotent; malicious migration filenames refused |
 | Data integrity | tampered snapshot refused with DB untouched; provenance recorded; idempotent re-import; stale rows pruned |
 | Adapters | private dwellings/offices excluded; shared category vocabulary; stable ids; OSM mapping |
-| Frontend (static) | no `innerHTML`/`eval`/`document.write`; no inline scripts or handlers (CSP-ready); vendored Leaflet matches SRI hashes |
 | Authentication | password policy, generic failures, Argon2 timing parity, rate limits, hardened cookies, `alg=none`/forged/expired/wrong-audience JWTs rejected, role claim ignored, refresh rotation + reuse detection, logout revocation, hashed token storage, secret-free audit |
 | Schema constraints | share must target exactly one user or an expiring link; photos must be EXIF-stripped with server-generated keys; favourites stay in-region without leaking coordinates; deleting a user cascades private data but keeps anonymised audit rows |
 | Accounts | display-name-only edits (role/email/id smuggling → 422), export contains only your data and no secrets, deletion needs the password, erases content, anonymises identity, keeps audit evidence, frees the email; last admin cannot delete themselves |
@@ -243,7 +242,7 @@ national and international boundaries are never rendered. This avoids depicting 
 differently from the official Survey of India depiction.
 
 **ISRO Bhuvan.** Bhuvan's terms grant a view-only, single-user licence, so its tiles are not
-embedded. Bengaluru places link out to Bhuvan 2D with a copy-coordinates helper instead.
+embedded. Places in the Indian cities (Bengaluru, Ahmedabad) link out to Bhuvan 2D with a copy-coordinates helper instead.
 
 ## Project layout
 
