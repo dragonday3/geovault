@@ -10,6 +10,7 @@ repos:
       - id: detect-private-key
       - id: check-added-large-files
         args: [--maxkb=1024]
+        exclude: ^data/raw/  # deliberate, SHA-256-manifested open-data snapshots (~3 MB each)
       - id: end-of-file-fixer
         exclude: ^(frontend/vendor|data/raw)/  # byte-exact files (SRI / SHA-256 verified)
       - id: trailing-whitespace

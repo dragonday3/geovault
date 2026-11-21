@@ -5,7 +5,7 @@
 | Purpose | Authorised security assessment of GeoVault running on the developer's own machine |
 | Standards | OWASP Web Security Testing Guide (WSTG v4.2), OWASP API Security Top 10 (2023), CVSS v3.1 |
 | Threat model | [threat-model.md](threat-model.md). Every test case below traces to a threat there |
-| Status | Secure-mode controls: **automated and passing** (295 tests in CI). Manual assessment: **planned**. Lab-mode assessment: blocked until milestone 11 exists |
+| Status | Secure-mode controls: **automated and passing** (313 tests in CI). Manual assessment: **planned**. Lab-mode assessment: blocked until milestone 11 exists |
 
 ## 1. Scope and rules of engagement
 
@@ -42,7 +42,7 @@ in-scope hosts only, so spidering and active scans never follow tile or CDN URLs
 | Item | Setup |
 |---|---|
 | Accounts | `alice@example.com` (user), `bob@example.com` (user, the second tenant for BOLA tests), `admin@example.com` promoted with `app.manage promote-admin` |
-| Data | Real open data (3,295 places); each user has boxes in at least two cities, one with a photo, plus user shares and link shares |
+| Data | Real open data (29,402 places); each user has boxes in at least two cities, one with a photo, plus user shares and link shares |
 | Tools | Burp Suite Community, OWASP ZAP, Postman, sqlmap, jwt_tool, ffuf, curl, browser devtools |
 | Automated baseline | `docker compose -f compose.test.yml run --rm --build test` (must be green before and after manual testing); `py -3.10 geoserver/verify.py` |
 | Logs | `docker compose logs -f api`: JSON lines with request IDs, used to correlate tests with server events |

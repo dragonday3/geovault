@@ -2,6 +2,7 @@
 import { api, session } from "../api.js";
 import { clear, copyText, fmt, h, icon, loading, plate, toast } from "../dom.js";
 import * as mapView from "../map.js";
+import { GROUPS, glyph, groupOf } from "../categories.js";
 
 const LIST_LIMIT = 500;
 const SHOWN_ROWS = 150;
@@ -9,7 +10,7 @@ const RADII = [250, 500, 1000, 2000, 5000];
 const BHUVAN = "https://bhuvan-app1.nrsc.gov.in/bhuvan2d/bhuvan/bhuvan2d.php";
 
 export async function render(ctx) {
-  const state = { q: "", category: null, near: null, radius: 1000, selected: null, categories: [], showAllChips: false };
+  const state = { q: "", group: null, near: null, radius: 1000, selected: null, categories: [] };
   let seq = 0;
   let debounce;
 
@@ -18,7 +19,7 @@ export async function render(ctx) {
     class: "input", type: "search", placeholder: "Search places by name", maxlength: "100",
     "aria-label": "Search places by name", autocomplete: "off",
   });
-  const chips = h("div", { class: "chips", role: "group", "aria-label": "Categories" });
+  const chips = h("div", { class: "chips", role: "group", "aria-label": "Map key and category filter" });
   const statusLine = h("div", { class: "status-line", role: "status" });
   const list = h("ul", { class: "list", "aria-label": "Places" });
 
@@ -45,17 +46,33 @@ export async function render(ctx) {
     renderChips();
   }
 
+  // The chips are the map key: each group's glyph (hue + shape) as drawn on the map, its count,
+  // and a filter. Groups follow the fixed order in categories.js so a hue never changes meaning.
+  function groupTotals() {
+    const totals = new Map();
+    for (const c of state.categories) {
+      const g = groupOf(c.category);
+      const t = totals.get(g) || { count: 0, categories: [] };
+      t.count += c.count;
+      t.categories.push(c.category);
+      totals.set(g, t);
+    }
+    return totals;
+  }
+
+  function selectedCategories() {
+    return state.group ? groupTotals().get(state.group)?.categories : null;
+  }
+
   function renderChips() {
-    const sorted = [...state.categories].sort((a, b) => b.count - a.count);
-    const visible = state.showAllChips ? sorted : sorted.slice(0, 7);
-    const chip = (label, value, count) => h("button", {
-      class: "chip", type: "button", "aria-pressed": String(state.category === value),
-      onClick: () => { state.category = value; renderChips(); refresh(); },
-    }, label, count !== undefined ? h("span", { class: "count", text: fmt.count(count) }) : null);
-    clear(chips, chip("All", null), visible.map((c) => chip(c.category, c.category, c.count)),
-      sorted.length > 7 ? h("button", {
-        class: "chip", type: "button", onClick: () => { state.showAllChips = !state.showAllChips; renderChips(); },
-      }, state.showAllChips ? "Fewer" : `+${sorted.length - 7} more`) : null);
+    const totals = groupTotals();
+    const chip = (key, label, count) => h("button", {
+      class: "chip", type: "button", "aria-pressed": String(state.group === key),
+      title: key ? totals.get(key).categories.join(", ") : null,
+      onClick: () => { state.group = key; renderChips(); refresh(); },
+    }, key ? glyph(key, "glyph") : null, label, count !== undefined ? h("span", { class: "count", text: fmt.count(count) }) : null);
+    clear(chips, chip(null, "All"),
+      Object.entries(GROUPS).filter(([key]) => totals.has(key)).map(([key, g]) => chip(key, g.label, totals.get(key).count)));
   }
 
   // ---------------------------------------------------------------- results
@@ -67,12 +84,12 @@ export async function render(ctx) {
       if (state.near) {
         data = await api("/api/places/near", {
           auth: false,
-          params: { lat: state.near.lat, lon: state.near.lon, radius_m: state.radius, limit: 100, region: ctx.region.code, category: state.category },
+          params: { lat: state.near.lat, lon: state.near.lon, radius_m: state.radius, limit: 100, region: ctx.region.code, category: selectedCategories() },
         });
       } else {
         data = await api("/api/places", {
           auth: false,
-          params: { region: ctx.region.code, category: state.category, q: state.q, bbox: mapView.viewBbox(), limit: LIST_LIMIT },
+          params: { region: ctx.region.code, category: selectedCategories(), q: state.q, bbox: mapView.viewBbox(), limit: LIST_LIMIT },
         });
       }
       if (mine !== seq) return;
@@ -98,7 +115,7 @@ export async function render(ctx) {
         class: "row", type: "button", "aria-current": state.selected?.id === f.id ? "true" : null,
         onClick: () => { select(f); mapView.flyTo(f.geometry.coordinates[1], f.geometry.coordinates[0], 16); },
       },
-      h("span", {}, h("span", { class: "row-title", text: f.properties.name }), plate(f.properties.category, "plate-steel")),
+      h("span", { class: "row-main" }, glyph(groupOf(f.properties.category), "glyph"), h("span", {}, h("span", { class: "row-title", text: f.properties.name }), plate(f.properties.category, "plate-steel"))),
       h("span", { class: "row-end" }, typeof f.properties.distance_m === "number" ? h("span", { class: "mono", text: fmt.metres(f.properties.distance_m) }) : null, icon("chevron", "i i-sm"))))));
     if (!n) list.append(h("li", { class: "empty" }, "No places here. Pan the map, clear the filter or try another search."));
     else if (n > SHOWN_ROWS) list.append(h("li", { class: "fine", text: `${fmt.count(n - SHOWN_ROWS)} more on the map.` }));

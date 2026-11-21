@@ -37,6 +37,33 @@ def test_categories_by_region(client):
     assert cats.get("Park and garden", 0) >= 6
 
 
+def test_repeated_category_filters_by_several(client):
+    """The map key filters by a group of categories: ?category=A&category=B."""
+    cats = sorted(c["category"] for c in client.get("/api/categories?region=melbourne").json())[:2]
+    assert len(cats) == 2
+    params = [("region", "melbourne"), ("limit", "500")] + [("category", c) for c in cats]
+    got = {f["properties"]["category"] for f in client.get("/api/places", params=params).json()["features"]}
+    assert got == set(cats)
+    near = client.get(
+        "/api/places/near",
+        params=[
+            *params[:1],
+            ("lat", FED_SQUARE["lat"]),
+            ("lon", FED_SQUARE["lon"]),
+            ("radius_m", 5000),
+            ("limit", 100),
+            *params[2:],
+        ],
+    )
+    assert near.status_code == 200
+    assert {f["properties"]["category"] for f in near.json()["features"]} <= set(cats)
+
+
+def test_category_filter_list_is_capped(client):
+    r = client.get("/api/places", params=[("category", f"c{i}") for i in range(21)])
+    assert r.status_code == 422
+
+
 def test_name_search_and_bbox(client):
     r = client.get("/api/places", params={"q": "gardens", "region": "melbourne"})
     assert "Fitzroy Gardens" in names(r)

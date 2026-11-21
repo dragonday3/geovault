@@ -1,10 +1,9 @@
-// The hall map: public places (green dots), private boxes (brass plates), the deposit
+// The hall map: public places (category glyphs), private boxes (brass plates), the deposit
 // picker, and the cloak lens (the signature interaction).
 /* global L */
 import { h } from "./dom.js";
+import { glyph, groupOf } from "./categories.js";
 
-const PLACE_STYLE = { radius: 5, color: "#ffffff", weight: 1.5, fillColor: "#1d4337", fillOpacity: 0.95 };
-const PLACE_ACTIVE = { radius: 8, color: "#16352c", weight: 2, fillColor: "#dcb86c", fillOpacity: 1 };
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
 let map;
@@ -62,9 +61,13 @@ export function showPlaces(features, onSelect) {
   activePlace = null;
   for (const f of features) {
     const [lon, lat] = f.geometry.coordinates;
-    const marker = L.circleMarker([lat, lon], PLACE_STYLE);
+    // Each category group has its own hue AND shape (categories.js), so colour is never the only cue.
+    const pin = glyph(groupOf(f.properties.category), "place-glyph");
+    const icon = L.divIcon({ html: pin, className: "place-pin", iconSize: [16, 16], iconAnchor: [8, 8] });
+    const marker = L.marker([lat, lon], { icon, keyboard: false, riseOnHover: true });
     // Tooltip content is a DOM node: Leaflet would treat a string as HTML.
-    marker.bindTooltip(h("span", { text: f.properties.name }), { direction: "top", offset: [0, -6] });
+    marker.bindTooltip(h("span", {}, h("span", { text: f.properties.name }), h("span", { class: "tip-cat", text: f.properties.category })),
+      { direction: "top", offset: [0, -8] });
     marker.on("click", () => onSelect(f));
     marker.addTo(placesLayer);
     placeMarkers.set(f.id, marker);
@@ -72,9 +75,11 @@ export function showPlaces(features, onSelect) {
 }
 
 export function highlightPlace(id) {
-  if (activePlace) activePlace.setStyle(PLACE_STYLE).setRadius(PLACE_STYLE.radius);
+  activePlace?.getElement()?.classList.remove("is-active");
+  activePlace?.setZIndexOffset(0);
   activePlace = placeMarkers.get(id) || null;
-  if (activePlace) activePlace.setStyle(PLACE_ACTIVE).setRadius(PLACE_ACTIVE.radius).bringToFront();
+  activePlace?.getElement()?.classList.add("is-active");
+  activePlace?.setZIndexOffset(1000);
 }
 
 export function clearPlaces() { placesLayer.clearLayers(); placeMarkers.clear(); activePlace = null; }

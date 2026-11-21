@@ -14,8 +14,25 @@ publishers' services. Snapshots are verified against SHA-256 hashes in
 | `com-drinking-fountains` | Melbourne | City of Melbourne — Drinking fountains | CC BY 4.0 | 338 |
 | `com-playgrounds` | Melbourne | City of Melbourne — Playgrounds (polygons → interior point) | CC BY 4.0 | 45 |
 | `com-public-artworks` | Melbourne | City of Melbourne — Public artworks, fountains and monuments | CC BY 4.0 | 261 |
-| `osm-bengaluru` | Bengaluru | OpenStreetMap contributors — Overpass extract | ODbL 1.0 | 1,995 of 1,996 |
-| `osm-ahmedabad` | Ahmedabad | OpenStreetMap contributors — Overpass extract (fetched via the kumi.systems public Overpass instance while overpass-api.de returned 502) | ODbL 1.0 | 375 of 375 |
+| `osm-melbourne` | Melbourne | OpenStreetMap contributors — Overpass extract (greater-Melbourne bbox) | ODbL 1.0 | 13,288 of 13,801 (478 skipped as duplicates of a City of Melbourne place within 40 m, 30 outside the region) |
+| `osm-bengaluru` | Bengaluru | OpenStreetMap contributors — Overpass extract | ODbL 1.0 | 13,298 of 13,300 |
+| `osm-ahmedabad` | Ahmedabad | OpenStreetMap contributors — Overpass extract | ODbL 1.0 | 1,891 of 1,892 |
+
+Total: **29,402 places** (Melbourne 14,213, Bengaluru 13,298, Ahmedabad 1,891).
+
+### What the OSM extract covers
+
+One Overpass query per city (`_OSM_POI_SELECTORS` in `data/sources.py`):
+
+- **Transport:** every railway station, halt and tram stop; every `highway=bus_stop`,
+  `amenity=bus_station` and `public_transport=station` (this is where BRTS/Janmarg and BMTC
+  stations appear). Stops with no name are kept as "Bus stop <ref>".
+- **Health and emergency:** hospitals, clinics, police and fire stations.
+- **Education:** named schools, colleges and universities.
+- **Worship, community and markets:** named places of worship, community centres and marketplaces.
+- **Culture:** libraries, museums, galleries, theatres, arts centres, cinemas, monuments, memorials, forts, attractions.
+- **Parks, play and sport:** named parks, public gardens, playgrounds, sports centres and stadiums.
+- **Amenities:** public toilets, drinking water, EV charging, post offices.
 
 Attribution text for each source is stored in the `place_sources` table, served by
 `GET /api/sources`, and shown in the map sidebar. CC BY 4.0 and ODbL both require it.
@@ -34,7 +51,12 @@ Attribution text for each source is stored in the `place_sources` table, served 
 - The City of Melbourne portal has **no EV-charging dataset**, so Melbourne has no `EV charging` places.
 - The landmarks dataset lists only **one library** (The Melbourne Athenaeum Library). City of
   Melbourne branch libraries are not in these datasets.
-- OSM coverage for Ahmedabad is thinner than for Bengaluru (375 vs 1,995 places), and Ahmedabad has no EV-charging points in the extract.
+- **Ahmedabad bus stops are under-mapped.** OSM has about 185 bus/BRT stops for Ahmedabad, while
+  AMTS runs roughly 4,000 stops. No open, licensed AMTS stop dataset or GTFS feed was found (the
+  TUMI data hub lists only terminals and depots; journey-planner apps are commercial and their data
+  is not reusable). The fix is upstream: map the stops in OpenStreetMap, or drop an official file
+  into `data/raw/manual/` with its licence and add an adapter. Ahmedabad also has no EV-charging
+  points in the extract.
 - The OSM snapshots reflect volunteer mapping at fetch time. Coverage and naming vary by suburb.
 
 ## Category vocabulary
@@ -42,8 +64,16 @@ Attribution text for each source is stored in the `place_sources` table, served 
 Every source maps into one shared list (`CATEGORIES` in `data/sources.py`), so a filter means
 the same thing in all three cities: Park and garden, Playground, Library, Museum and gallery,
 Theatre and venue, Public art and monument, Landmark, Sport and recreation, Place of worship,
-Education, Health, Emergency services, Transport, Market and shopping, Public toilet,
+Education, Health, Emergency services, Rail metro and tram, Bus and BRT, Market and shopping,
+Community centre, Post office, Public toilet,
 Drinking water, EV charging.
+
+On the map the categories fold into **eight groups**, each with its own colour *and* shape
+(`frontend/js/categories.js`): rail, metro and tram (blue square); bus and BRT (orange diamond);
+parks, play and sport (green circle); culture and landmarks (pink circle); health and emergency
+(red triangle); education (violet circle); worship, community and markets (yellow square);
+everyday amenities (aqua circle). The hues are a colour-blind-validated categorical palette; pairs
+that are too close in hue always differ in shape. The chips above the list are the key and the filter.
 
 ## Refreshing a snapshot
 

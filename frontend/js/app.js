@@ -28,7 +28,9 @@ const ctx = {
     ctx.region = r;
     setRegion(r);
     renderCityPlates();
-    if (!silent) for (const fn of regionListeners) fn(r);
+    // Snapshot: a listener re-renders its view, which unsubscribes and re-subscribes. Iterating
+    // the live Set would visit the new subscription too, forever (froze the tab on city switch).
+    if (!silent) for (const fn of [...regionListeners]) fn(r);
   },
   onRegion(fn) { regionListeners.add(fn); return () => regionListeners.delete(fn); },
 };

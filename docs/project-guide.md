@@ -9,8 +9,8 @@ to bottom once, then use it as a reference.
 ## 1. What GeoVault is, in one minute
 
 GeoVault is a map app for three cities: **Melbourne, Bengaluru and Ahmedabad**. Anyone can
-explore about 3,300 real public places (parks, libraries, metro stations, EV chargers, toilets
-and more) from official open data and OpenStreetMap. Signed-in users keep a private **vault**
+explore about 29,000 real public places (bus and BRT stops, metro, train and tram stations,
+hospitals, schools, parks, temples, libraries, toilets, EV chargers and more) from official open data and OpenStreetMap. Signed-in users keep a private **vault**
 of their own places, such as home, office or a favourite chai stall. Each place has an exact
 location, a private note and a photo, and can be shared with friends **without revealing the
 exact spot**.
@@ -69,7 +69,14 @@ the rail.
 
 How to use it:
 - **Search** by name. The list follows the map, so pan or zoom to change what is shown.
-- **Category chips** filter by type (Park and garden, Library, Transport…), with counts.
+- **The map key.** Places are drawn in eight groups, each with its own colour *and* shape:
+  rail/metro/tram (blue square), bus and BRT (orange diamond), parks (green circle), culture
+  (pink circle), health and emergency (red triangle), education (violet circle), worship and
+  community (yellow square), everyday amenities (aqua circle). The chips above the list are
+  the key: each shows the glyph and a count, and clicking one filters the map to that group.
+  Hover a marker to see its name and category.
+- **Dense views are sampled.** When more than 500 places are in view, an even sample is shown
+  and the status line says so; zoom in or filter to see every one.
 - **Click a place** (on the map or in the list) to open its card. The card shows the
   coordinates, the data source and licence, and these actions:
   - **Deposit in my vault** saves this place privately.
@@ -182,7 +189,7 @@ flowchart LR
 | Frontend | Plain JavaScript modules (no framework), Leaflet for the map, a hash router (`#/vault/…`). Fonts and Leaflet are served from our own server. | `frontend/` |
 | Data | One-time snapshots of open data, checksummed, imported offline. | `data/` |
 | GeoServer | Optional OGC map server for GIS tools. | `geoserver/`, `docker-compose.yml` |
-| Tests and CI | 295 tests against a real database, plus five CI jobs on every push. | `tests/`, `.github/workflows/ci.yml` |
+| Tests and CI | 313 tests against a real database, plus five CI jobs on every push. | `tests/`, `.github/workflows/ci.yml` |
 
 **Life of a request,** for example opening Box 005:
 1. The browser sends `GET /api/favourites/<id>` with `Authorization: Bearer <access token>`.
@@ -231,7 +238,7 @@ so asking repeatedly can't be averaged back to the truth.
 | M13 | Threat model and test plan | STRIDE analysis and a localhost pentest plan, all traced to tests |
 | **M11** | **Lab mode** | **Not built.** A deliberately vulnerable localhost-only variant for the pentest exercise; to be implemented by the developer (plan in the local `CLAUDE.md`) |
 
-Numbers worth quoting: **3,295** real places across three cities; **295** automated tests; **5**
+Numbers worth quoting: **29,402** real places across three cities; **313** automated tests; **5**
 CI security jobs on every push; **16/16** GeoServer verification checks. **Every key control
 was mutation-checked:** the protection was deliberately removed to confirm a test fails.
 
@@ -371,7 +378,7 @@ checks it fails."
 **"How do you know your security controls work?"**
 "Each control has a test, and I mutation-checked the important ones: I deliberately removed the
 ownership check, the admin guard, the cloaking and the EXIF stripping, and confirmed the right
-tests failed before restoring them. CI runs 295 tests plus secret, dependency and container
+tests failed before restoring them. CI runs 313 tests plus secret, dependency and container
 scans on every push."
 
 **"Why strip photo metadata by rebuilding the image?"**

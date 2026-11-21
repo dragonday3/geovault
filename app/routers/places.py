@@ -9,6 +9,7 @@ no code path where request input becomes SQL text.
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query
+from pydantic import StringConstraints
 
 from app.database import Conn
 from app.schemas.places import CategoryCount, DataSource, PlaceCollection, PlaceFeature, Region
@@ -94,11 +95,15 @@ def categories(conn: Conn, region: RegionCode = None):
     ).fetchall()
 
 
+# Repeat the parameter to filter by several categories (one map legend group = several categories).
+Categories = Annotated[list[Annotated[str, StringConstraints(max_length=100)]] | None, Query(max_length=20)]
+
+
 @router.get("/places", response_model=PlaceCollection)
 def list_places(
     conn: Conn,
     region: RegionCode = None,
-    category: Annotated[str | None, Query(max_length=100)] = None,
+    category: Categories = None,
     q: Annotated[str | None, Query(min_length=1, max_length=100)] = None,
     bbox: Annotated[str | None, Query(max_length=100, description="minLon,minLat,maxLon,maxLat")] = None,
     limit: Annotated[int, Query(ge=1, le=MAX_LIST_LIMIT)] = 200,
@@ -109,11 +114,13 @@ def list_places(
         """
         SELECT id, name, category, region, source, ST_X(geom) AS lon, ST_Y(geom) AS lat FROM places
         WHERE (%(region)s::text IS NULL OR region = %(region)s)
-          AND (%(cat)s::text IS NULL OR category = %(cat)s)
+          AND (%(cat)s::text[] IS NULL OR category = ANY(%(cat)s))
           AND (%(q)s::text IS NULL OR name ILIKE %(q)s)
           AND (%(x1)s::float8 IS NULL
                OR geom && ST_MakeEnvelope(%(x1)s, %(y1)s, %(x2)s, %(y2)s, 4326))
-        ORDER BY name, id
+        -- With a name search, alphabetical. Otherwise a stable hash order, so a capped page is
+        -- an even spatial sample of the view rather than only names starting with "A".
+        ORDER BY CASE WHEN %(q)s::text IS NULL THEN md5(id::text) ELSE name END, id
         LIMIT %(limit)s OFFSET %(offset)s
         """,
         {
@@ -138,7 +145,7 @@ def places_near(
     lon: Annotated[float, Query(ge=-180, le=180)],
     radius_m: Annotated[int, Query(ge=1, le=MAX_RADIUS_M)] = 1000,
     limit: Annotated[int, Query(ge=1, le=MAX_NEAR_LIMIT)] = 20,
-    category: Annotated[str | None, Query(max_length=100)] = None,
+    category: Categories = None,
     region: RegionCode = None,
 ):
     rows = conn.execute(
@@ -148,7 +155,7 @@ def places_near(
                ST_Distance(geom::geography, p.g) AS distance_m
         FROM places, p
         WHERE ST_DWithin(geom::geography, p.g, %(r)s)
-          AND (%(cat)s::text IS NULL OR category = %(cat)s)
+          AND (%(cat)s::text[] IS NULL OR category = ANY(%(cat)s))
           AND (%(region)s::text IS NULL OR region = %(region)s)
         ORDER BY distance_m, id
         LIMIT %(limit)s

@@ -4,6 +4,25 @@ All notable changes to GeoVault. Format: [Keep a Changelog](https://keepachangel
 
 ## [Unreleased]
 
+### Data and map (2026-11-21)
+- **Far more places: 29,402 (was 3,295).** The OSM extract now covers every bus stop, BRT and
+  bus station, railway station, halt and tram stop, plus hospitals, clinics, police and fire
+  stations, schools, colleges, places of worship, community centres, cinemas, stadiums and post
+  offices. Melbourne gains an OSM extract alongside City of Melbourne data; points within 40 m of
+  a same-category CoM place are skipped as duplicates.
+- Categories: `Transport` split into `Rail, metro and tram` and `Bus and BRT`; added
+  `Community centre` and `Post office`.
+- **Map key:** eight category groups, each with its own colour and shape (colour-blind-validated
+  palette; shapes separate the hue pairs that are too close). The chips are the key and filter.
+  `category` may now be repeated on `/api/places` and `/api/places/near` (max 20).
+- Unsearched place lists use a stable hash order, so a capped page is an even spatial sample.
+- Known gap documented: OSM has only ~185 Ahmedabad bus/BRT stops (AMTS runs ~4,000), and no
+  open AMTS stop dataset exists.
+
+### Fixed
+- Switching city froze the tab: `setRegion` iterated the live listener `Set` while the hall view
+  unsubscribed and re-subscribed, so the loop never ended. It now iterates a snapshot.
+
 ### Docs (2026-11-21)
 - `docs/project-guide.md`: what GeoVault is, a screen-by-screen tour, how it works, milestone
   status, skills and knowledge applied, 30-second interview explanations, cheat-sheet and glossary.

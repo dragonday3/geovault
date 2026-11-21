@@ -82,13 +82,35 @@ def import_source(conn: psycopg.Connection, key: str, meta: dict) -> dict:
                 {"source_id": source_id, "name": name, "category": category, "geometry": f.get("geometry")}
             )
 
+        duplicates = 0
+        if radius := src.get("dedupe_radius_m"):
+            # Skip points that another source already has nearby in the same category
+            # (e.g. OSM vs City of Melbourne inside the LGA).
+            kept = []
+            for row in rows:
+                hit = conn.execute(
+                    """
+                    SELECT 1 FROM places
+                    WHERE region = %s AND source <> %s AND category = %s
+                      AND ST_DWithin(geom::geography,
+                                     ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326)::geography, %s)
+                    LIMIT 1
+                    """,
+                    (src["region"], key, row["category"], json.dumps(row["geometry"]), radius),
+                ).fetchone()
+                if hit:
+                    duplicates += 1
+                else:
+                    kept.append(row)
+            rows = kept
+
         stats = upsert_rows(conn, src["region"], key, rows)
         accepted = stats.pop("accepted_ids")
         pruned = conn.execute(
             "DELETE FROM places WHERE source = %s AND NOT (source_id = ANY(%s))",
             (key, list(accepted)),
         ).rowcount
-    return {**stats, "skipped_by_adapter": skipped, "pruned": pruned}
+    return {**stats, "skipped_by_adapter": skipped, "skipped_duplicates": duplicates, "pruned": pruned}
 
 
 def main() -> None:

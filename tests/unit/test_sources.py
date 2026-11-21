@@ -41,7 +41,32 @@ def test_hash_ids_are_stable_and_location_sensitive():
     [
         ({"amenity": "charging_station"}, ("EV charging station", "EV charging")),
         ({"amenity": "toilets"}, ("Public toilet", "Public toilet")),
-        ({"railway": "station", "station": "subway", "name": "Majestic"}, ("Majestic", "Transport")),
+        (
+            {"railway": "station", "station": "subway", "name": "Majestic"},
+            ("Majestic", "Rail, metro and tram"),
+        ),
+        ({"railway": "tram_stop", "name": "Swanston St"}, ("Swanston St", "Rail, metro and tram")),
+        ({"highway": "bus_stop", "name": "Lal Darwaja"}, ("Lal Darwaja", "Bus and BRT")),
+        ({"highway": "bus_stop", "ref": "117"}, ("Bus stop 117", "Bus and BRT")),
+        ({"highway": "bus_stop"}, ("Bus stop", "Bus and BRT")),
+        (
+            {"public_transport": "station", "name": "Shivranjani", "network": "Janmarg"},
+            ("Shivranjani", "Bus and BRT"),
+        ),
+        (
+            {"public_transport": "station", "train": "yes", "name": "Kalupur"},
+            ("Kalupur", "Rail, metro and tram"),
+        ),
+        ({"amenity": "hospital", "name": "Civil Hospital"}, ("Civil Hospital", "Health")),
+        ({"amenity": "police"}, ("Emergency service", "Emergency services")),
+        ({"amenity": "school", "name": "Sir JJ School"}, ("Sir JJ School", "Education")),
+        ({"amenity": "place_of_worship", "name": "Jama Masjid"}, ("Jama Masjid", "Place of worship")),
+        ({"amenity": "place_of_worship"}, None),
+        ({"amenity": "post_office", "name": "GPO"}, ("GPO", "Post office")),
+        (
+            {"leisure": "stadium", "name": "Narendra Modi Stadium"},
+            ("Narendra Modi Stadium", "Sport and recreation"),
+        ),
         (
             {"leisure": "park", "name": "ಕಬ್ಬನ್ ಉದ್ಯಾನವನ", "name:en": "Cubbon Park"},
             ("Cubbon Park", "Park and garden"),

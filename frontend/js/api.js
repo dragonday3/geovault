@@ -41,7 +41,8 @@ export async function api(path, options = {}) {
   const { method = "GET", body, form, params, raw = false, auth = true, retry = true } = options;
   const url = new URL(path, window.location.origin);
   for (const [k, v] of Object.entries(params || {})) {
-    if (v !== null && v !== undefined && v !== "") url.searchParams.set(k, v);
+    if (Array.isArray(v)) v.forEach((item) => url.searchParams.append(k, item));
+    else if (v !== null && v !== undefined && v !== "") url.searchParams.set(k, v);
   }
   const headers = { Accept: "application/json" };
   if (auth && accessToken) headers.Authorization = `Bearer ${accessToken}`;

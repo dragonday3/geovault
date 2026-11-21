@@ -7,7 +7,7 @@ A multi-region geospatial web application built on public open data for **Melbou
 attack a deliberately vulnerable **local lab** instance, remediate, and prove the fixes with
 regression tests.
 
-> **Status: Milestone 13 — threat model and test plan.** 3,295 real places across three cities;
+> **Status: Milestone 13 — threat model and test plan.** 29,402 real places across three cities;
 > accounts, private favourites, cloaked sharing, photos, admin, GeoServer, CI and the full UI are
 > built (see `CHANGELOG.md`). **Lab mode (milestone 11) is not built yet.** Only features listed
 > under *What works now* are implemented. New here? Read the **[project guide](docs/project-guide.md)**.
@@ -22,7 +22,7 @@ the only location anyone you share with ever receives.
 
 | | |
 |---|---|
-| ![Cloak lens: the box snaps into its 500 m grid cell; the true spot is drawn only for the owner](docs/images/ui-box-shared.webp) | ![Bengaluru public hall with 1,995 open-data places](docs/images/ui-desktop.webp) |
+| ![Cloak lens: the box snaps into its 500 m grid cell; the true spot is drawn only for the owner](docs/images/ui-box-shared.webp) | ![Bengaluru public hall with open-data places](docs/images/ui-desktop.webp) |
 | *Cloak lens (Shared view): recipients see the cell centre, 217 m from the true spot* | *Public hall: open data, category plates, city-clamped map* |
 | ![My vault: numbered boxes in two cities](docs/images/ui-vault.webp) | ![Access register: every security event, admin-only](docs/images/ui-register.webp) |
 | *My vault: numbered boxes, capacity printed on the furniture* | *Access register (admin): secret-free audit trail* |
@@ -125,7 +125,7 @@ verification: **[docs/geoserver.md](docs/geoserver.md)**.
 ## Testing
 
 ```powershell
-docker compose -f compose.test.yml run --rm --build test   # 295 tests, ~45 s after the image is built
+docker compose -f compose.test.yml run --rm --build test   # 313 tests, ~45 s after the image is built
 docker compose -f compose.test.yml down -v                 # remove the throwaway test database
 ```
 
@@ -227,9 +227,9 @@ Gitleaks, private-key detection and file hygiene before every local commit:
 
 | Region | Country | Projected CRS (precision cloaking) | Data | Places |
 |---|---|---|---|---|
-| `melbourne` | AU | EPSG:7855 GDA2020 / MGA 55 | City of Melbourne Open Data — 5 datasets (CC BY 4.0) | 925 |
-| `bengaluru` | IN | EPSG:32643 WGS 84 / UTM 43N | OpenStreetMap extract (ODbL 1.0); Indian government datasets can be added | 1,995 |
-| `ahmedabad` | IN | EPSG:32643 WGS 84 / UTM 43N | OpenStreetMap extract (ODbL 1.0) | 375 |
+| `melbourne` | AU | EPSG:7855 GDA2020 / MGA 55 | City of Melbourne Open Data — 5 datasets (CC BY 4.0) + OpenStreetMap extract (ODbL 1.0) | 14,213 |
+| `bengaluru` | IN | EPSG:32643 WGS 84 / UTM 43N | OpenStreetMap extract (ODbL 1.0); Indian government datasets can be added | 13,298 |
+| `ahmedabad` | IN | EPSG:32643 WGS 84 / UTM 43N | OpenStreetMap extract (ODbL 1.0); bus stops under-mapped, see data-sources | 1,891 |
 
 Datasets are snapshotted once into `data/raw/` with a SHA-256 manifest and imported offline,
 so the app never calls third-party services at runtime. All sources map into one shared

@@ -72,8 +72,8 @@ open-licence (OFL), vendored locally, and committed with their licence files.
 
 ## Evidence on Hand
 
-- Real place data: 3,295 places: 925 Melbourne, 1,995 Bengaluru, 375 Ahmedabad.
-- Test suite: 295 tests; documentation is in `docs/`, starting with `docs/project-guide.md`.
+- Real place data: 29,402 places: 14,213 Melbourne, 13,298 Bengaluru, 1,891 Ahmedabad, including bus, BRT, rail and tram stops.
+- Test suite: 313 tests; documentation is in `docs/`, starting with `docs/project-guide.md`.
 - There are no testimonials, users, metrics or press. Never fabricate them.
 
 ## Product Principles

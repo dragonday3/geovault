@@ -325,6 +325,31 @@ a { color: inherit; text-underline-offset: 3px; text-decoration-thickness: 1px; 
 .chip[aria-pressed="true"] { background: var(--on-vault); color: var(--vault-900); border-color: var(--on-vault); }
 .chip .count { font-family: var(--font-mono); font-size: 11.5px; opacity: 0.75; }
 
+/* Place-category key: hue + shape per group (categories.js). Hues are the validated reference
+   palette; the ink ring gives every glyph contrast on the light basemap (several hues sit
+   below 3:1 on their own), and shapes separate the hue pairs too close for colour-blind eyes. */
+:root {
+  --g-rail: #2a78d6; --g-bus: #eb6834; --g-park: #008300; --g-culture: #e87ba4;
+  --g-health: #e34948; --g-edu: #6250d6; --g-community: #eda100; --g-amenity: #1baf7a;
+  --g-ring: #0b1f19;
+}
+.glyph { width: 14px; height: 14px; flex: none; overflow: visible; }
+.shape { stroke: var(--g-ring); stroke-width: 1.4; stroke-linejoin: round; }
+.g-rail { fill: var(--g-rail); } .g-bus { fill: var(--g-bus); } .g-park { fill: var(--g-park); }
+.g-culture { fill: var(--g-culture); } .g-health { fill: var(--g-health); } .g-edu { fill: var(--g-edu); }
+.g-community { fill: var(--g-community); } .g-amenity { fill: var(--g-amenity); }
+.chip .glyph .shape { stroke: var(--vault-950); }
+.chip[aria-pressed="true"] .glyph .shape { stroke: var(--vault-900); }
+.row-main { display: flex; align-items: flex-start; gap: 10px; }
+.row-main > .glyph { margin-top: 3px; }
+.place-pin { background: none; border: 0; }
+.place-glyph { width: 16px; height: 16px; display: block; overflow: visible; transition: transform var(--t-fast) var(--ease-out); }
+.place-pin:hover .place-glyph { transform: scale(1.25); }
+.place-pin.is-active .place-glyph { transform: scale(1.6); }
+.place-pin.is-active .shape { stroke: var(--brass-500); stroke-width: 2; }
+.leaflet-tooltip .tip-cat { display: block; font-size: 11.5px; color: var(--on-vault-2); }
+@media (prefers-reduced-motion: reduce) { .place-glyph { transition: none; } }
+
 /* ---------------------------------------------------------------- lists */
 .status-line { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin: 16px 0 6px; font-size: 13px; color: var(--on-vault-2); }
 .list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--vault-rule); }
